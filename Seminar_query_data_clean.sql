@@ -1,3 +1,14 @@
+use Seminar;
+
+DROP TABLE bol_data;
+
+SELECT *
+INTO bol_data
+FROM data_load_1;
+
+INSERT INTO bol_data
+SELECT * FROM data_load_2;
+
 -- Remove duplicate rows from the table -> 1.507.270 rows
 SELECT DISTINCT * 
 INTO #temp_bol_data
@@ -19,9 +30,9 @@ FROM #temp_bol_data;
 -- Delete all noise (non-sensible rows)
 DELETE FROM cleaned_bol_data
 WHERE ((startDateCase < orderDate) OR (cancellationDate < orderDate) OR (promisedDeliveryDate < orderDate)
-		OR (shipmentDate < orderDate) OR (datetTimeFirstDeliveryMoment < orderDate) OR (returnDateTime < orderDate)
-		OR (orderDate < registrationDateSeller) OR (cancellationDate > datetTimeFirstDeliveryMoment) 
-		OR (cancellationDate > returnDateTime) OR (CONVERT(date,returnDateTime) < (CONVERT(date,datetTimeFirstDeliveryMoment)) 
+		OR (shipmentDate < orderDate) OR (CONVERT(date,datetTimeFirstDeliveryMoment) < orderDate) OR (returnDateTime < orderDate)
+		OR (orderDate < registrationDateSeller) OR (cancellationDate > CONVERT(date,datetTimeFirstDeliveryMoment)) 
+		OR (cancellationDate > returnDateTime) OR (returnDateTime < (CONVERT(date,datetTimeFirstDeliveryMoment)) 
 		AND datetTimeFirstDeliveryMoment IS NOT NULL AND returnDateTime IS NOT NULL) OR (shipmentDate > returnDateTime)
 		OR (shipmentDate > CONVERT(date,datetTimeFirstDeliveryMoment)) OR (registrationDateSeller IS NULL)
 		OR (cancellationDate > shipmentDate AND (cancellationReasonCode = 'CUST_FE' OR cancellationReasonCode = 'CUST_CS')));
@@ -33,8 +44,8 @@ SELECT COUNT(*) FROM cleaned_bol_data;
 -- Check: boolean to classification correct
 SELECT onTimeDelivery, noReturn, noCancellation, noCase, detailedMatchClassification, count(*)
 FROM #temp_bol_data
-WHERE onTimeDelivery IS NULL
-GROUP BY onTimeDelivery, noReturn, noCancellation, noCase, detailedMatchClassification;
+GROUP BY onTimeDelivery, noReturn, noCancellation, noCase, detailedMatchClassification
+ORDER BY noCancellation, noCase, noReturn, onTimeDelivery;
 
 -- Check whether the boolean variables are constructed correctly according to the related variables (CANCELLATIONS INCORRECT)
 WITH diff_return_check AS (
@@ -60,4 +71,4 @@ SELECT *
 FROM cleaned_bol_data
 WHERE cancellationReasonCode LIKE 'CUST%' AND noCancellation = 1;
 
-
+SELECT * FROM cleaned_bol_data;
