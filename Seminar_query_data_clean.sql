@@ -24,7 +24,7 @@ DROP TABLE cleaned_bol_data;
 
 -- Then move all rows from the non-duplicates table into the cleaned table
 SELECT *
-INTO cleaned_bol_data
+INTO cleaned_bol_data -- cleaned table
 FROM #temp_bol_data;
 
 -- Delete all noise (non-sensible rows)
