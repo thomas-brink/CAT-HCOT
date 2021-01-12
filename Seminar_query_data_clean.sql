@@ -148,7 +148,7 @@ SELECT	TOP 100
 					THEN 'Post-corona'
 				ELSE 'Pre-corona'
 		END AS corona_period,
-		-- ADD HOLIDAYS,
+		-- ADD HOLIDAYS? DON'T THINK SO, NOT EVEN 2 FULL YEARS OF DATA -> NON-SENSICAL PREDICTIONS
 		CASE	WHEN tc.nr_occurrences > 100 
 					THEN tc.transporterCode
 				ELSE 'Other'
@@ -162,3 +162,7 @@ SELECT transporterName, count(*)
 FROM cleaned_bol_data
 GROUP BY transporterName;
 
+SELECT orderDate, sum(totalPrice)
+FROM cleaned_bol_data
+GROUP BY orderDate
+ORDER BY orderDate;
