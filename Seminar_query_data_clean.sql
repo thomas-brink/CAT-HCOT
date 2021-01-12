@@ -121,6 +121,14 @@ SELECT	TOP 100
 					THEN 'Late'
 				ELSE 'Unknown'
 		END AS delivery_category,
+		CASE	WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,startDateCase)) < 5)
+					THEN 'Case started'
+				ELSE 'Case not (yet) started'
+		END AS case_category,
+		CASE	WHEN (DATEDIFF(day,orderDate,returnDateTime) < 5)
+					THEN 'Return'
+				ELSE 'Unknown return'
+		END AS return_category,
 		DATEPART(year,orderDate) AS order_year,
 		FORMAT(DATEPART(month,orderDate),'00') AS order_month,
 		CONCAT(DATEPART(year,orderDate),'-',FORMAT(DATEPART(month,orderDate),'00')) AS order_year_month,
