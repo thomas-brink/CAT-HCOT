@@ -126,8 +126,10 @@ SELECT	TOP 100
 				ELSE 'Case not (yet) started'
 		END AS case_category,
 		CASE	WHEN (DATEDIFF(day,orderDate,returnDateTime) < 5)
-					THEN 'Return'
-				ELSE 'Unknown return'
+					THEN 'Delivered, returned'
+				WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) < 5)
+					THEN 'Delivered, not (yet) returned'
+				ELSE 'Not yet delivered'
 		END AS return_category,
 		DATEPART(year,orderDate) AS order_year,
 		FORMAT(DATEPART(month,orderDate),'00') AS order_month,
