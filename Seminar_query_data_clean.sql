@@ -71,4 +71,68 @@ SELECT *
 FROM cleaned_bol_data
 WHERE cancellationReasonCode LIKE 'CUST%' AND noCancellation = 1;
 
-SELECT * FROM cleaned_bol_data;
+SELECT TOP 100 * FROM cleaned_bol_data;
+
+-- Get an idea of all possible classifications
+SELECT noCancellation, onTimeDelivery, noCase, noReturn, detailedMatchClassification, count(*)
+FROM cleaned_bol_data
+--WHERE noCancellation = 1 AND noReturn = 1 AND noCase = 1
+GROUP BY noCancellation, onTimeDelivery, noCase, noReturn, detailedMatchClassification;
+
+SET DATEFIRST 1;
+-- Create multi-class classification variable
+SELECT	TOP 100 
+		cleaned_bol_data.*, 
+		CASE	WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 1 AND onTimeDelivery = 'true')
+					THEN 'All good'
+				WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 1 AND onTimeDelivery IS NULL)
+					THEN 'Unknown delivery'
+				WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 1 AND onTimeDelivery = 'false')
+					THEN 'Late delivery'
+				WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 0 AND onTimeDelivery = 'true')
+					THEN 'Case'
+				WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 0 AND onTimeDelivery IS NULL)
+					THEN 'Case + Unknown delivery'
+				WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 0 AND onTimeDelivery = 'false')
+					THEN 'Case + Late delivery'
+				WHEN (noCancellation = 1 AND noReturn = 0 AND noCase = 1 AND onTimeDelivery = 'true')
+					THEN 'Return'
+				WHEN (noCancellation = 1 AND noReturn = 0 AND noCase = 1 AND onTimeDelivery IS NULL)
+					THEN 'Return + Unknown delivery'
+				WHEN (noCancellation = 1 AND noReturn = 0 AND noCase = 1 AND onTimeDelivery = 'false')
+					THEN 'Return + Late delivery'
+				WHEN (noCancellation = 1 AND noReturn = 0 AND noCase = 0 AND onTimeDelivery = 'true')
+					THEN 'Return + Case'
+				WHEN (noCancellation = 1 AND noReturn = 0 AND noCase = 0 AND onTimeDelivery IS NULL)
+					THEN 'Return + Case + Unknown delivery'
+				WHEN (noCancellation = 1 AND noReturn = 0 AND noCase = 0 AND onTimeDelivery = 'false')
+					THEN 'Return + Case + Late delivery'
+				WHEN (noCancellation = 0 AND noReturn = 1 AND noCase = 0 AND onTimeDelivery = 'true')
+					THEN 'Cancellation + Case'
+				WHEN (noCancellation = 0)
+					THEN 'Cancellation'
+		END AS multi_class,
+		5   AS looking_forward_days, -- adjust yourself 
+		CASE	WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) < 5 
+				  AND DATEDIFF(day,promisedDeliveryDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) <= 0)
+					THEN 'On time'
+				WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) < 5
+				  AND DATEDIFF(day,promisedDeliveryDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) > 0)
+					THEN 'Late'
+				ELSE 'Unknown'
+		END AS delivery_category,
+		DATEPART(year,orderDate) AS order_year,
+		FORMAT(DATEPART(month,orderDate),'00') AS order_month,
+		CONCAT(DATEPART(year,orderDate),'-',FORMAT(DATEPART(month,orderDate),'00')) AS order_year_month,
+		DATEPART(weekday,orderDate) as order_weekday,
+		CASE	WHEN DATEPART(weekday,orderDate) <= 5
+					THEN 0
+				ELSE 1
+		END AS weekend,
+		CASE	WHEN orderDate > '2020-03-20'
+					THEN 'Post-corona'
+				ELSE 'Pre-corona'
+		END AS corona_period
+		-- ADD HOLIDAYS,
+FROM cleaned_bol_data;
+
