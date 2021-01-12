@@ -79,10 +79,15 @@ FROM cleaned_bol_data
 --WHERE noCancellation = 1 AND noReturn = 1 AND noCase = 1
 GROUP BY noCancellation, onTimeDelivery, noCase, noReturn, detailedMatchClassification;
 
+-- Code to create table to be used for multi-class classification; run altogether
 SET DATEFIRST 1;
--- Create multi-class classification variable
+DECLARE @looking_forward_days INTEGER = 5;
+WITH transporter_classification AS (
+SELECT transporterCode, count(*) AS nr_occurrences
+FROM cleaned_bol_data
+GROUP BY transporterCode )
 SELECT	TOP 100 
-		cleaned_bol_data.*, 
+		cbd.*, 
 		CASE	WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 1 AND onTimeDelivery = 'true')
 					THEN 'All good'
 				WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 1 AND onTimeDelivery IS NULL)
@@ -112,22 +117,22 @@ SELECT	TOP 100
 				WHEN (noCancellation = 0)
 					THEN 'Cancellation'
 		END AS multi_class,
-		5   AS looking_forward_days, -- adjust yourself 
-		CASE	WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) < 5 
+		@looking_forward_days as looking_forward_days, -- adjust yourself 
+		CASE	WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) < @looking_forward_days 
 				  AND DATEDIFF(day,promisedDeliveryDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) <= 0)
 					THEN 'On time'
-				WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) < 5
+				WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) < @looking_forward_days
 				  AND DATEDIFF(day,promisedDeliveryDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) > 0)
 					THEN 'Late'
 				ELSE 'Unknown'
 		END AS delivery_category,
-		CASE	WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,startDateCase)) < 5)
+		CASE	WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,startDateCase)) < @looking_forward_days)
 					THEN 'Case started'
 				ELSE 'Case not (yet) started'
 		END AS case_category,
-		CASE	WHEN (DATEDIFF(day,orderDate,returnDateTime) < 5)
+		CASE	WHEN (DATEDIFF(day,orderDate,returnDateTime) < @looking_forward_days)
 					THEN 'Delivered, returned'
-				WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) < 5)
+				WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,datetTimeFirstDeliveryMoment)) < @looking_forward_days)
 					THEN 'Delivered, not (yet) returned'
 				ELSE 'Not yet delivered'
 		END AS return_category,
@@ -142,7 +147,18 @@ SELECT	TOP 100
 		CASE	WHEN orderDate > '2020-03-20'
 					THEN 'Post-corona'
 				ELSE 'Pre-corona'
-		END AS corona_period
+		END AS corona_period,
 		-- ADD HOLIDAYS,
-FROM cleaned_bol_data;
+		CASE	WHEN tc.nr_occurrences > 100 
+					THEN tc.transporterCode
+				ELSE 'Other'
+		END AS transporter_feature,
+		DATEDIFF(month,registrationDateSeller,orderDate) AS partner_selling_months
+FROM cleaned_bol_data as cbd
+INNER JOIN transporter_classification as tc
+	ON (cbd.transporterCode = tc.transporterCode);
+
+SELECT transporterName, count(*)
+FROM cleaned_bol_data
+GROUP BY transporterName;
 
