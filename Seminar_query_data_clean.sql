@@ -9,17 +9,17 @@ FROM data_2019;
 INSERT INTO bol_data
 SELECT * FROM data_2020;
 
--- Original data set -> 4.755.375 rows
+-- Original data set -> 4.779.466 rows
 SELECT COUNT(*) FROM bol_data;
 
--- Remove duplicate rows from the table -> 1.507.270 rows
+-- Remove duplicate rows from the table -> 4.454.130 rows
 SELECT DISTINCT * 
 INTO #temp_bol_data
 FROM bol_data;
 
--- Count nr. of rows in total data (non-duplicates): 1.507.270 rows
+-- Count nr. of rows in total data (non-duplicates): 4.779.466 rows
 SELECT COUNT(*)
-FROM #temp_bol_data;
+FROM bol_data;
 
 -- CREATE CLEANED TABLE
 -- First drop existing version of the table
@@ -28,7 +28,7 @@ DROP TABLE cleaned_bol_data;
 -- Then move all rows from the non-duplicates table into the cleaned table
 SELECT *
 INTO cleaned_bol_data -- cleaned table
-FROM #temp_bol_data;
+FROM bol_data;
 
 -- Delete all noise (non-sensible rows)
 DELETE FROM cleaned_bol_data
@@ -40,7 +40,7 @@ WHERE ((startDateCase < orderDate) OR (cancellationDate < orderDate) OR (promise
 		OR (shipmentDate > CONVERT(date,dateTimeFirstDeliveryMoment)) OR (registrationDateSeller IS NULL)
 		OR (cancellationDate > shipmentDate AND (cancellationReasonCode = 'CUST_FE' OR cancellationReasonCode = 'CUST_CS')));
 
--- Count the rows in the resulting, cleaned table -> 1.504.836 rows
+-- Count the rows in the resulting, cleaned table -> 4.773.889 rows
 SELECT COUNT(*) FROM cleaned_bol_data;
 
 -- CHECKS
@@ -74,10 +74,10 @@ SELECT diffReturnCheck, diffCaseCheck, diffCancellationCheck, diffOnTimeDelivery
 FROM diff_return_check
 GROUP BY diffReturnCheck, diffCaseCheck, diffCancellationCheck, diffOnTimeDeliveryCheck;
 
--- All entries with a cancellation reason for which the noCancellation boolean is 1 (20.883 rows)
+-- All entries with a cancellation reason for which the noCancellation boolean is 1 (54.162 rows) -> check 10 days property
 SELECT *
 FROM cleaned_bol_data
-WHERE cancellationReasonCode LIKE 'CUST%' AND noCancellation = 1;
+WHERE cancellationReasonCode IS NOT NULL AND noCancellation = 1;
 
 SELECT TOP 100 * FROM cleaned_bol_data;
 
@@ -91,6 +91,18 @@ SELECT	noCancellation,
 FROM cleaned_bol_data
 --WHERE noCancellation = 1 AND noReturn = 1 AND noCase = 1
 GROUP BY noCancellation, onTimeDelivery, noCase, noReturn, generalMatchClassification;
+
+-- Division into general classification 
+SELECT	generalMatchClassification,
+		COUNT(*)
+FROM cleaned_bol_data
+GROUP BY generalMatchClassification;
+
+-- Division into detailed classification
+SELECT	detailedMatchClassification,
+		COUNT(*)
+FROM cleaned_bol_data
+GROUP BY detailedMatchClassification;
 
 -- Code to create table to be used for multi-class classification; run altogether
 SET DATEFIRST 1;
@@ -191,6 +203,29 @@ SELECT DISTINCT returnCode
 FROM cleaned_bol_data;
 SELECT TOP 100 * FROM cleaned_bol_data;
 
+SELECT transporterCode, count(*)
+FROM cleaned_bol_data
+GROUP BY transporterCode;
 
+-- Analysis on Unknown Matches for the Data section
+SELECT	generalMatchClassification, 
+		COUNT(*) 
+FROM cleaned_bol_data 
+WHERE promisedDeliveryDate IS NULL
+GROUP BY generalMatchClassification;
+
+SELECT	*
+FROM cleaned_bol_data
+WHERE dateTimeFirstDeliveryMoment IS NOT NULL 
+		AND generalMatchClassification = 'UNKNOWN'
+		AND DATEDIFF(DAY,orderDate,dateTimeFirstDeliveryMoment) < 13;
+
+SELECT	SUM(CASE WHEN dateTimeFirstDeliveryMoment IS NULL THEN 1 ELSE 0 END) AS null_delivery_moment,
+		COUNT(*)
+FROM cleaned_bol_data WHERE generalMatchClassification = 'UNKNOWN';
+
+SELECT *
+FROM cleaned_bol_data
+WHERE generalMatchClassification = 'UNKNOWN';
 
 
