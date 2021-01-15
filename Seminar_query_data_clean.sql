@@ -9,6 +9,9 @@ FROM data_2019;
 INSERT INTO bol_data
 SELECT * FROM data_2020;
 
+ALTER TABLE bol_data
+ALTER COLUMN totalPrice FLOAT;
+
 -- Original data set -> 4.779.466 rows
 SELECT COUNT(*) FROM bol_data;
 
@@ -30,7 +33,7 @@ SELECT *
 INTO cleaned_bol_data -- cleaned table
 FROM bol_data;
 
--- Delete all noise (non-sensible rows)
+-- Delete all noise (non-sensible rows) -> delete 5.577 rows
 DELETE FROM cleaned_bol_data
 WHERE ((startDateCase < orderDate) OR (cancellationDate < orderDate) OR (promisedDeliveryDate < orderDate)
 		OR (shipmentDate < orderDate) OR (CONVERT(date,dateTimeFirstDeliveryMoment) < orderDate) OR (returnDateTime < orderDate)
@@ -111,8 +114,7 @@ WITH transporter_classification AS (
 SELECT transporterCode, count(*) AS nr_occurrences
 FROM cleaned_bol_data
 GROUP BY transporterCode )
-SELECT	TOP 100 
-		cbd.*, 
+SELECT	cbd.*, 
 		CASE	WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 1 AND onTimeDelivery = 'true')
 					THEN 'All good'
 				WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 1 AND onTimeDelivery IS NULL)
@@ -186,8 +188,11 @@ SELECT	TOP 100
 		DATEDIFF(day,orderDate,startDateCase) AS case_days,
 		DATEDIFF(day,orderDate,returnDateTime) AS return_days
 FROM cleaned_bol_data as cbd
-INNER JOIN transporter_classification as tc
+LEFT JOIN transporter_classification as tc
 	ON (cbd.transporterCode = tc.transporterCode);
+
+-- Simple adjustment of the above query allows for copying all old + newly created variables in table 'cleaned_bol_data_full'
+-- Select all these rows and download to extract the full table to be used in the future
 
 -- Some checks
 SELECT transporterName, COUNT(*)
@@ -227,5 +232,11 @@ FROM cleaned_bol_data WHERE generalMatchClassification = 'UNKNOWN';
 SELECT *
 FROM cleaned_bol_data
 WHERE generalMatchClassification = 'UNKNOWN';
+
+SELECT * FROM cleaned_bol_data
+WHERE productId = '9200000078766106' AND orderDate = '2019-03-08';
+
+SELECT * FROM cleaned_bol_data;
+
 
 
