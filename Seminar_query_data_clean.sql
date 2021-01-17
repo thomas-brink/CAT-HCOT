@@ -77,10 +77,15 @@ SELECT diffReturnCheck, diffCaseCheck, diffCancellationCheck, diffOnTimeDelivery
 FROM diff_return_check
 GROUP BY diffReturnCheck, diffCaseCheck, diffCancellationCheck, diffOnTimeDeliveryCheck;
 
--- All entries with a cancellation reason for which the noCancellation boolean is 1 (54.162 rows) -> check 10 days property
+-- All entries with a cancellation reason for which the noCancellation boolean is 1 (51.961 rows)
 SELECT *
 FROM cleaned_bol_data
-WHERE cancellationReasonCode IS NOT NULL AND noCancellation = 1;
+WHERE cancellationReasonCode IS NOT NULL 
+	AND noCancellation = 1
+	AND DATEDIFF(DAY,orderDate,cancellationDate) <= 10;
+SELECT *
+FROM cleaned_bol_data
+WHERE noCancellation = 0;
 
 SELECT TOP 100 * FROM cleaned_bol_data;
 
