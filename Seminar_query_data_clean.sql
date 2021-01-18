@@ -148,8 +148,8 @@ SELECT	cbd.*,
 					THEN 'Cancellation + Case'
 				WHEN (noCancellation = 0)
 					THEN 'Cancellation'
-		END AS multi_class,
-		@looking_forward_days as looking_forward_days, -- adjust yourself 
+		END AS determinantClassification,
+		@looking_forward_days as lookingForwardDays, -- adjust yourself 
 		CASE	WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,dateTimeFirstDeliveryMoment)) < @looking_forward_days 
 				  AND DATEDIFF(day,promisedDeliveryDate,CONVERT(DATE,dateTimeFirstDeliveryMoment)) <= 0)
 					THEN 'On time'
@@ -157,41 +157,41 @@ SELECT	cbd.*,
 				  AND DATEDIFF(day,promisedDeliveryDate,CONVERT(DATE,dateTimeFirstDeliveryMoment)) > 0)
 					THEN 'Late'
 				ELSE 'Unknown'
-		END AS delivery_category,
+		END AS deliveryCategory,
 		CASE	WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,startDateCase)) < @looking_forward_days)
 					THEN 'Case started'
 				ELSE 'Case not (yet) started'
-		END AS case_category,
+		END AS caseCategory,
 		CASE	WHEN (DATEDIFF(day,orderDate,returnDateTime) < @looking_forward_days)
 					THEN 'Delivered, returned'
 				WHEN (DATEDIFF(day,orderDate,CONVERT(DATE,dateTimeFirstDeliveryMoment)) < @looking_forward_days)
 					THEN 'Delivered, not (yet) returned'
 				ELSE 'Not yet delivered'
-		END AS return_category,
-		DATEPART(year,orderDate) AS order_year,
-		FORMAT(DATEPART(month,orderDate),'00') AS order_month,
-		CONCAT(DATEPART(year,orderDate),'-',FORMAT(DATEPART(month,orderDate),'00')) AS order_year_month,
-		DATEPART(weekday,orderDate) as order_weekday,
+		END AS returnCategory,
+		DATEPART(year,orderDate) AS orderYear,
+		FORMAT(DATEPART(month,orderDate),'00') AS orderMonth,
+		CONCAT(DATEPART(year,orderDate),'-',FORMAT(DATEPART(month,orderDate),'00')) AS orderYearMonth,
+		DATEPART(weekday,orderDate) as orderWeekday,
 		CASE	WHEN DATEPART(weekday,orderDate) <= 5
 					THEN 0
 				ELSE 1
-		END AS weekend,
+		END AS orderWeekend,
 		CASE	WHEN orderDate > '2020-03-20'
 					THEN 'Post-corona'
 				ELSE 'Pre-corona'
-		END AS corona_period,
+		END AS orderCorona,
 		-- ADD HOLIDAYS? DON'T THINK SO, NOT EVEN 2 FULL YEARS OF DATA -> NON-SENSICAL PREDICTIONS
 		CASE	WHEN tc.nr_occurrences > 100 
 					THEN tc.transporterCode
 				ELSE 'Other'
-		END AS transporter_feature,
-		DATEDIFF(month,registrationDateSeller,orderDate) AS partner_selling_months,
-		DATEDIFF(day,orderDate,cancellationDate) AS cancellation_days,
-		DATEDIFF(day,orderDate,shipmentDate) AS shipping_days,
-		DATEDIFF(day,orderDate,promisedDeliveryDate) AS promised_delivery_days,
-		DATEDIFF(day,orderDate,dateTimeFirstDeliveryMoment) AS actual_delivery_days,
-		DATEDIFF(day,orderDate,startDateCase) AS case_days,
-		DATEDIFF(day,orderDate,returnDateTime) AS return_days
+		END AS transporterFeature,
+		DATEDIFF(month,registrationDateSeller,orderDate) AS partnerSellingMonths,
+		DATEDIFF(day,orderDate,cancellationDate) AS cancellationDays,
+		DATEDIFF(day,orderDate,shipmentDate) AS shipmentDays,
+		DATEDIFF(day,orderDate,promisedDeliveryDate) AS promisedDeliveryDays,
+		DATEDIFF(day,orderDate,dateTimeFirstDeliveryMoment) AS actualDeliveryDays,
+		DATEDIFF(day,orderDate,startDateCase) AS caseDays,
+		DATEDIFF(day,orderDate,returnDateTime) AS returnDays
 FROM cleaned_bol_data as cbd
 LEFT JOIN transporter_classification as tc
 	ON (cbd.transporterCode = tc.transporterCode);
@@ -253,5 +253,10 @@ FROM cleaned_bol_data
 WHERE noReturn = 0
 GROUP BY onTimeDelivery;
 
+-- Decision tree validation -> Unknown delivery should be further down the tree
+SELECT generalMatchClassification, noCancellation, COUNT(*)
+FROM cleaned_bol_data
+WHERE noReturn = 0 AND onTimeDelivery IS NULL
+GROUP BY generalMatchClassification, noCancellation;
 
 
