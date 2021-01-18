@@ -113,12 +113,15 @@ FROM cleaned_bol_data
 GROUP BY detailedMatchClassification;
 
 -- Code to create table to be used for multi-class classification; run altogether
+DROP transporter_classification;
+SELECT transporterCode, count(*) AS nr_occurrences
+INTO transporter_classification
+FROM cleaned_bol_data
+GROUP BY transporterCode;
+
+DROP TABLE cleaned_bol_data_full;
 SET DATEFIRST 1;
 DECLARE @looking_forward_days INTEGER = 5;
-WITH transporter_classification AS (
-SELECT transporterCode, count(*) AS nr_occurrences
-FROM cleaned_bol_data
-GROUP BY transporterCode )
 SELECT	cbd.*, 
 		CASE	WHEN (noCancellation = 1 AND noReturn = 1 AND noCase = 1 AND onTimeDelivery = 'true')
 					THEN 'All good'
@@ -180,7 +183,6 @@ SELECT	cbd.*,
 					THEN 'Post-corona'
 				ELSE 'Pre-corona'
 		END AS orderCorona,
-		-- ADD HOLIDAYS? DON'T THINK SO, NOT EVEN 2 FULL YEARS OF DATA -> NON-SENSICAL PREDICTIONS
 		CASE	WHEN tc.nr_occurrences > 100 
 					THEN tc.transporterCode
 				ELSE 'Other'
@@ -192,12 +194,10 @@ SELECT	cbd.*,
 		DATEDIFF(day,orderDate,dateTimeFirstDeliveryMoment) AS actualDeliveryDays,
 		DATEDIFF(day,orderDate,startDateCase) AS caseDays,
 		DATEDIFF(day,orderDate,returnDateTime) AS returnDays
+INTO cleaned_bol_data_full
 FROM cleaned_bol_data as cbd
 LEFT JOIN transporter_classification as tc
 	ON (cbd.transporterCode = tc.transporterCode);
-
--- Simple adjustment of the above query allows for copying all old + newly created variables in table 'cleaned_bol_data_full'
--- Select all these rows and download to extract the full table to be used in the future
 
 -- Some checks
 SELECT transporterName, COUNT(*)
