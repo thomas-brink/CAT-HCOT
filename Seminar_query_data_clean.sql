@@ -243,5 +243,15 @@ WHERE productId = '9200000078766106' AND orderDate = '2019-03-08';
 
 SELECT * FROM cleaned_bol_data;
 
+-- Check co-occurrences of booleans -> 8.6% of cancellations has case, 0.2% of cancellations delivered on time
+-- 1.2% of cases has cancellation, 6.4% of cases has late delivery, 53.0% of cases has NULL delivery
+-- 26.5% of cases has return, 6.3% of late deliveries has case, 6.4% of late deliveries has return
+-- 1.4% of NULL deliveries has cancellation, 5.1% of NULL deliveries has case, 5.9% of NULL deliveries has return
+-- 15.5% of returns has case, 3.8% of returns has late delivery, 35.7% of returns has NULL delivery
+SELECT onTimeDelivery, COUNT(*)
+FROM cleaned_bol_data
+WHERE noReturn = 0
+GROUP BY onTimeDelivery;
+
 
 
