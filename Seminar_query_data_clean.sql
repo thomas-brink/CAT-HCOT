@@ -259,4 +259,8 @@ FROM cleaned_bol_data
 WHERE noReturn = 0 AND onTimeDelivery IS NULL
 GROUP BY generalMatchClassification, noCancellation;
 
+-- Remove rows with NULL promisedDeliveryDate?
+SELECT *
+FROM cleaned_bol_data
+WHERE promisedDeliveryDate IS NULL;
 
