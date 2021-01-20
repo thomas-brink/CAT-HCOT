@@ -232,6 +232,8 @@ LEFT JOIN transporter_classification as tc
 ALTER TABLE cleaned_bol_data_full
 ADD productTitleLength AS LEN(productTitle);
 
+SELECT TOP 100 * FROM cleaned_bol_data_full;
+
 -- Some checks
 SELECT transporterName, COUNT(*)
 FROM cleaned_bol_data
