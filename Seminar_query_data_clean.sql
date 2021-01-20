@@ -229,6 +229,9 @@ FROM cleaned_bol_data as cbd
 LEFT JOIN transporter_classification as tc
 	ON (cbd.transporterCode = tc.transporterCode);
 
+ALTER TABLE cleaned_bol_data_full
+ADD productTitleLength AS LEN(productTitle);
+
 -- Some checks
 SELECT transporterName, COUNT(*)
 FROM cleaned_bol_data
