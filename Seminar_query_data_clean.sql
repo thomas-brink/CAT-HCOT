@@ -314,3 +314,24 @@ WHERE quantityReturned > quantityOrdered;
 SELECT * FROM cleaned_bol_data
 WHERE noReturn = 0;
 
+-- Check number of occurrences per product
+SELECT productId, COUNT(*)
+FROM cleaned_bol_data_full
+GROUP BY productId
+ORDER BY COUNT(*) DESC;
+
+-- Check number of occurrences per sellerId
+SELECT sellerId, COUNT(*)
+FROM cleaned_bol_data_full
+GROUP BY sellerId
+ORDER BY COUNT(*) DESC;
+
+-- Check fraction of return quantity per productId
+SELECT productId, SUM(ISNULL(quantityReturned,0)) as totalQuantityReturned, SUM(quantityOrdered) as totalQuantityOrdered
+FROM cleaned_bol_data_full
+GROUP BY productId;
+
+-- Check fraction of return quantity per sellerId
+SELECT sellerId, SUM(ISNULL(quantityReturned,0)) as totalQuantityReturned, SUM(quantityOrdered) as totalQuantityOrdered
+FROM cleaned_bol_data_full
+GROUP BY sellerId;
