@@ -5,24 +5,29 @@ use BOL;
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Division into general classification 
 select generalMatchClassification,
-       count(*) [count]
-from dbo.data_combined
-group by generalMatchClassification;
+       count(*) [count],
+       round(count(*) * 1e2 / (select count(*)from dbo.data_cleaned), 2) [percentage]
+from dbo.data_cleaned
+group by generalMatchClassification
+order by 2 desc;
 
 -- Division into detailed classification
 select detailedMatchClassification,
-       count(*) [count]
-from dbo.data_combined
-group by detailedMatchClassification;
+       count(*) [count],
+	   round(count(*) * 1e2 / (select count(*)from dbo.data_cleaned), 2) [percentage]
+from dbo.data_cleaned
+group by detailedMatchClassification
+order by 2 desc;
 
 -- Get an idea of all possible classifications
 select noCancellation,
        onTimeDelivery,
        noCase,
        noReturn,
-       generalMatchClassification,
-       count(*) [count]
-from dbo.data_combined
+       detailedMatchClassification,
+       count(*) [count],
+	   round(count(*) * 1e2 / (select count(*)from dbo.data_cleaned), 2) [percentage]
+from dbo.data_cleaned
 where 1 = 1
       --and noCancellation = 1
       --and noReturn = 1
@@ -32,7 +37,7 @@ group by noCancellation,
          onTimeDelivery,
          noCase,
          noReturn,
-         generalMatchClassification
+         detailedMatchClassification
 order by 1,
 		 2,
 		 3,
@@ -41,7 +46,7 @@ order by 1,
 -- Price trend
 select orderDate,
        sum(totalPrice)
-from dbo.data_combined
+from dbo.data_cleaned
 group by orderDate
 order by orderDate;
 
@@ -50,10 +55,10 @@ order by orderDate;
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 select transporterName,
        count(*) as [count],
-       round(sum(case when generalMatchClassification like '%HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_happy,
-       round(sum(case when generalMatchClassification like '%UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_unhappy,
-       round(sum(case when generalMatchClassification like '%UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) groups_unknown
-from dbo.data_combined
+       round(sum(case when generalMatchClassification like 'KNOWN HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_happy,
+       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unhappy,
+       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unknown
+from dbo.data_cleaned
 group by transporterName
 order by 3,2;
 
@@ -63,7 +68,7 @@ from
 (
     select transporterName,
            count(*) [count]
-    from dbo.data_combined
+    from dbo.data_cleaned
     where generalMatchClassification like 'UNKNOWN'
     group by transporterName
 ) as x;
@@ -72,12 +77,12 @@ select generalMatchClassification,
        round(   count(*) * 1e2 /
                 (
                     select count(*)
-                    from dbo.data_combined
+                    from dbo.data_cleaned
                     where transporterName like '%brief%'
                 ),
                 2
             ) as [percentage]
-from dbo.data_combined
+from dbo.data_cleaned
 where transporterName like '%brief%'
 group by generalMatchClassification;
 
@@ -99,10 +104,10 @@ where generalMatchClassification like 'UNKNOWN';
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 select productGroup,
        count(*) as [count],
-       round(sum(case when generalMatchClassification like '%HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_happy,
-       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_unhappy,
-       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) groups_unknown
-from dbo.data_combined
+       round(sum(case when generalMatchClassification like 'KNOWN HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_happy,
+       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unhappy,
+       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unknown
+from dbo.data_cleaned
 group by productGroup
 order by 3;
 
@@ -111,10 +116,10 @@ order by 3;
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 select transporterName,
 	   count(*) [count],
-       round(sum(case when generalMatchClassification like '%HAPPY' then 1 else 0 end)*1e2 / count(*), 2) happy_orders,
-       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end)*1e2 / count(*), 2) unhappy_orders,
-       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end)*1e2 / count(*), 2) unknown_orders
-from dbo.data_combined
+       round(sum(case when generalMatchClassification like 'KNOWN HAPPY' then 1 else 0 end)*1e2 / count(*), 2) percentage_happy,
+       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end)*1e2 / count(*), 2) percentage_unhappy,
+       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end)*1e2 / count(*), 2) percentage_unknown
+from dbo.data_cleaned
 group by transporterName
 order by 3,2;
 
@@ -124,10 +129,10 @@ order by 3,2;
 select productGroup,
        productSubGroup,
        count(*) as [count],
-       round(sum(case when generalMatchClassification like '%HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_happy,
-       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_unhappy,
-       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) groups_unknown
-from dbo.data_combined
+       round(sum(case when generalMatchClassification like 'KNOWN HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_happy,
+       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unhappy,
+       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unknown
+from dbo.data_cleaned
 group by productGroup,
          productSubGroup
 order by 1,
@@ -138,36 +143,24 @@ order by 1,
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 select sellerId,
        count(*) as [count],
-       round(sum(case when generalMatchClassification like '%HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_happy,
-       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_unhappy,
-       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) groups_unknown
-from dbo.data_combined
+       round(sum(case when generalMatchClassification like 'KNOWN HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_happy,
+       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unhappy,
+       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unknown
+from dbo.data_cleaned
 group by sellerId
-having count(*) > 1000
-order by 3,
+--having count(*) > 1000
+order by 3 desc,
          2;
 
-select generalMatchClassification,
-       count(*) [count]
-from dbo.data_combined
-where transporterName like 'Anders'
-group by generalMatchClassification;
-
-select datediff(day, orderDate, cancellationDate),
-       count(*) [count]
-from dbo.data_combined
-group by datediff(day, orderDate, cancellationDate)
-order by 1;
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Link between order quantity and match classifications
+-- Link between order quantity and match classifications (not really a trend)
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 select quantityOrdered,
        count(*) as [count],
-       round(sum(case when generalMatchClassification like '%HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_happy,
-       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) groups_unhappy,
-       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) groups_unknown
-from dbo.data_combined
+       round(sum(case when generalMatchClassification like 'KNOWN HAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_happy,
+       round(sum(case when generalMatchClassification like 'UNHAPPY' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unhappy,
+       round(sum(case when generalMatchClassification like 'UNKNOWN' then 1 else 0 end) * 1e2 / count(*), 2) percentage_unknown
+from dbo.data_cleaned
 group by quantityOrdered
 order by 1;
 
@@ -175,7 +168,7 @@ select quantityOrdered,
 	   count(*) as [count],
        sum(case when noReturn = 1 then 0 else 1 end) as [returns],
 	   round(sum(case when noReturn = 1 then 0 else 1 end)*1e2 / count(*), 2) as percentage
-from dbo.data_combined
+from dbo.data_cleaned
 group by quantityOrdered
 order by 1
 
@@ -184,16 +177,16 @@ order by 1
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 select cancellationReasonCode,
        count(*) [count],
-       round(count(*) * 1e2 / (select count(*)from dbo.data_combined where cancellationDate is not null), 2) [percentage of cancellations]
-from dbo.data_combined
+       round(count(*) * 1e2 / (select count(*)from dbo.data_cleaned where cancellationDate is not null), 2) [percentage of cancellations]
+from dbo.data_cleaned
 where cancellationDate is not null
 group by cancellationReasonCode
 order by 2 desc;
 
 select returnCode,
        count(*) [count],
-       round(count(*) * 1e2 / (select count(*)from dbo.data_combined where returnDate is not null), 2) [percentage of returns]
-from dbo.data_combined
+       round(count(*) * 1e2 / (select count(*)from dbo.data_cleaned where returnDate is not null), 2) [percentage of returns]
+from dbo.data_cleaned
 where returnDate is not null
 group by returnCode
 order by 2 desc;
@@ -212,7 +205,7 @@ select noCancellation,
        round(count(*) * 1e2 / sum(count(*)) over (partition by noReturn), 4) [percentage of noReturn group],
        round(count(*) * 1e2 / sum(count(*)) over (partition by noCase), 4) [percentage of noCase group]
 into #determinant_dependencies
-from dbo.data_combined
+from dbo.data_cleaned
 group by noCancellation,
          onTimeDelivery,
          noReturn,

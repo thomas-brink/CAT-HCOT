@@ -1,10 +1,10 @@
 use BOL;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- CREATE COMBINED TABLE
+-- CREATE IMPORTING AND CLEANED TABLES
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Create table for combined (cleaned) data
---create table dbo.data_combined (
+-- Create table for imported data
+--create table dbo.data_imported (
 --    orderDate date null,
 --    productId bigint null,
 --    sellerId int null,
@@ -45,8 +45,80 @@ use BOL;
 --    generalMatchClassification nvarchar(max) null
 --);
 
--- Create table for cleaned and transformed (full) data set
+-- Create table for cleaned (combined) data
+--create table dbo.data_cleaned (
+--    orderDate date null,
+--    productId bigint null,
+--    sellerId int null,
+--    totalPrice float null,
+--    quantityOrdered int null,
+--    countryCode nvarchar(max) null,
+--    cancellationDate date null,
+--    cancellationReasonCode nvarchar(max) null,
+--    promisedDeliveryDate date null,
+--    shipmentDate date null,
+--    transporterCode varchar(max) null,
+--    transporterName varchar(max) null,
+--    transporterNameOther nvarchar(max) null,
+--    dateTimeFirstDeliveryMoment datetime2 null,
+--    fulfilmentType nvarchar(max) null,
+--    startDateCase date null,
+--    cntDistinctCaseIds int null,
+--    returnDate date null,
+--    quantityReturned int null,
+--    returnCode nvarchar(max) null,
+--    productTitle nvarchar(max) null,
+--    brickName nvarchar(max) null,
+--    chunkName nvarchar(max) null,
+--    productGroup nvarchar(max) null,
+--    productSubGroup nvarchar(max) null,
+--    productSubSubGroup nvarchar(max) null,
+--    registrationDateSeller date null,
+--    countryOriginSeller nvarchar(max) null,
+--    currentCountryAvailabilitySeller nvarchar(max) null,
+--    calculationDefinitive nvarchar(max) null,
+--    noCancellation bit null,
+--    onTimeDelivery bit null,
+--    noCase bit null,
+--    hasOneCase bit null,
+--    hasMoreCases bit null,
+--    noReturn bit null,
+--    detailedMatchClassification nvarchar(max) null,
+--    generalMatchClassification nvarchar(max) null
+--);
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- LOAD CREATED TABLES
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--delete dbo.data_imported
+--where year(orderDate) = 2019;
+
+--insert into dbo.data_imported
+--select *
+--from dbo.data_2019;
+------------------------------------
+--delete dbo.data_imported
+--where year(orderDate) = 2020;
+
+--insert into dbo.data_imported
+--select *
+--from dbo.data_2020;
+
+----================================
+
+--delete dbo.data_cleaned
+--where year(orderDate) = 2019;
+
+--insert into dbo.data_cleaned
+--select *
+--from dbo.data_2019;
+------------------------------------
+--delete dbo.data_cleaned
+--where year(orderDate) = 2020;
+
+--insert into dbo.data_cleaned
+--select *
+--from dbo.data_2020;
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Create table to be used for multi-class classification; run altogether
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -54,7 +126,7 @@ drop table if exists #transporter_classification;
 select transporterCode,
        count(*) as nr_occurrences
 into #transporter_classification
-from dbo.data_combined
+from dbo.data_cleaned
 group by transporterCode;
 
 drop table if exists dbo.data_combined_full;
@@ -157,25 +229,7 @@ select cbd.*,
        case when format(datepart(month, cbd.orderDate), '00') = '10' then 1 else 0 end as orderOctober,
        case when format(datepart(month, cbd.orderDate), '00') = '11' then 1 else 0 end as orderNovember,
        case when format(datepart(month, cbd.orderDate), '00') = '12' then 1 else 0 end as orderDecember
-into dbo.data_combined_full
-from dbo.data_combined as cbd
+into dbo.data_cleaned_full
+from dbo.data_cleaned as cbd
     left join #transporter_classification as tc
         on (cbd.transporterCode = tc.transporterCode);
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- LOAD
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---delete dbo.data_combined
---where year(orderDate) = 2019;
-
---insert into dbo.data_combined
---select *
---from dbo.data_2019;
-
-
---delete dbo.data_combined
---where year(orderDate) = 2020;
-
---insert into dbo.data_combined
---select *
---from dbo.data_2020;
