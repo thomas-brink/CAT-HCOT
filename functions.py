@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-def test():
-    print(np.array([0,0]))
-
-
-# In[ ]:
+import numpy as np
 
 
 def addKnownColumns(df,X):
@@ -15,7 +11,6 @@ def addKnownColumns(df,X):
            df = dataFrame
     """
 #     df_ = df[['actualDeliveryDays','onTimeDelivery','shipmentDays','transporterCodeGeneral']]
-    print('Hello World')
     
     df['caseKnownX']           = df['caseDays'].apply(lambda x: True if x <= X else False)
     df['returnKnownX']         = df['returnDays'].apply(lambda x: True if x <= X else False)
@@ -32,9 +27,6 @@ def addKnownColumns(df,X):
         df[dummyColumn] = df.apply(lambda row: True if ((row.shipmentDays <= X) and (row.transporterCodeGeneral == transporter)) else False, axis = 1)
 
     return df
-
-
-# In[ ]:
 
 
 def addProductColumns(df,X):
@@ -57,9 +49,6 @@ def addProductColumns(df,X):
     return df
 
 
-# In[ ]:
-
-
 def addSellerColumns(df,X):
     
     if 'sellerDailyOrders0' not in list(df.columns):
@@ -75,9 +64,6 @@ def addSellerColumns(df,X):
         df['sellerDailyOrdersX'] = df['sellerDailyOrders0']
         
     return df
-
-
-# In[ ]:
 
 
 def addProductColumns0(df): 
@@ -170,9 +156,6 @@ def addProductColumns0(df):
     return(df)
 
 
-# In[ ]:
-
-
 def addProductColumnsX(df,X):
     """
     Function to add 4 columns: productOrderCountX, productTotalCountX, productTotalReturnedX and productReturnFractionX.
@@ -240,9 +223,6 @@ def addProductColumnsX(df,X):
     return(df)
 
 
-# In[ ]:
-
-
 def addSellerColumns0(df):
     """
     Function to add 4 columns: 
@@ -269,9 +249,6 @@ def addSellerColumns0(df):
     df['sellerDailyOrders0'] = np.log(sellerTotalCount / df_['daysFirstOrder'])
     
     return df
-
-
-# In[ ]:
 
 
 def addSellerColumnsX(df,X):
