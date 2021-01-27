@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+def test():
+    print(np.array([0,0]))
+
+
 # In[ ]:
 
 
@@ -11,6 +15,7 @@ def addKnownColumns(df,X):
            df = dataFrame
     """
 #     df_ = df[['actualDeliveryDays','onTimeDelivery','shipmentDays','transporterCodeGeneral']]
+    print('Hello World')
     
     df['caseKnownX']           = df['caseDays'].apply(lambda x: True if x <= X else False)
     df['returnKnownX']         = df['returnDays'].apply(lambda x: True if x <= X else False)
@@ -332,4 +337,3 @@ def addSellerColumnsX(df,X):
     df = df.reset_index(drop = True)
 
     return df
-
