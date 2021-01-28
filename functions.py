@@ -228,12 +228,12 @@ def addProductColumnsX(df,X):
 def addSellerColumns0(df):
     """
     Function to add 4 columns: 
-    Input: dataFrame with columns: 'sellerId','orderDate','quantityOrdered','partnerSellingMonths'
+    Input: dataFrame with columns: 'sellerId','orderDate','quantityOrdered','partnerSellingDays'
     """
     df = df.sort_values(by = ['sellerId','orderDate'])
     df = df.reset_index(drop = True)
     
-    df_ = df[['sellerId','orderDate','quantityOrdered','partnerSellingMonths']]
+    df_ = df[['sellerId','orderDate','quantityOrdered','partnerSellingDays']]
     
     firstOrder = df_.groupby('sellerId').orderDate.min()
     df_['firstOrder'] = df_.merge(firstOrder,
