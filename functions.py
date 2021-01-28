@@ -11,21 +11,22 @@ def addKnownColumns(df,X):
     Input: X = number of days after order date at which the prediction is made
            df = dataFrame
     """
-#     df_ = df[['actualDeliveryDays','onTimeDelivery','shipmentDays','transporterCodeGeneral']]
+    df_ = df[['actualDeliveryDays','onTimeDelivery','shipmentDays','transporterCodeGeneral']].values
     
     df['caseKnownX']           = df['caseDays'].apply(lambda x: True if x <= X else False)
     df['returnKnownX']         = df['returnDays'].apply(lambda x: True if x <= X else False)
     df['cancellationKnownX']   = df['cancellationDays'].apply(lambda x: True if x <= X else False)
     
-#     df_['actualDeliveryKnown'] = df['actualDeliveryDays'].apply(lambda x: True if x <= X else False)
-#     df_['shipmentDaysKnown']   = df['shipmentDays'].apply(lambda x: True if x <= X else False)
+    df['onTimeDeliveryKnownX'] = ((df_[:,0] <= X) & (df_[:,1] == True))
+    df['lateDeliveryKnownX'] = ((df_[:,0] <= X) & (df_[:,1] == False))
     
-    df['onTimeDeliveryKnownX'] = df.apply(lambda row: True if ((row.actualDeliveryDays <= X) and (row.onTimeDelivery == True)) else False, axis = 1)
-    df['lateDeliveryKnownX']   = df.apply(lambda row: True if ((row.actualDeliveryDays <= X) and (row.onTimeDelivery == False)) else False, axis = 1)
+    # df['onTimeDeliveryKnownX'] = df.apply(lambda row: True if ((row.actualDeliveryDays <= X) and (row.onTimeDelivery == True)) else False, axis = 1)
+    # df['lateDeliveryKnownX']   = df.apply(lambda row: True if ((row.actualDeliveryDays <= X) and (row.onTimeDelivery == False)) else False, axis = 1)
     
     for transporter in df['transporterCodeGeneral'].unique():
         dummyColumn = 'transporter' + transporter +'/X'
-        df[dummyColumn] = df.apply(lambda row: True if ((row.shipmentDays <= X) and (row.transporterCodeGeneral == transporter)) else False, axis = 1)
+        df[dummyColumn] = ((df_[:,2] <= X) & (df_[:,3] == transporter))
+        # df[dummyColumn] = df.apply(lambda row: True if ((row.shipmentDays <= X) and (row.transporterCodeGeneral == transporter)) else False, axis = 1)
 
     return df
 
