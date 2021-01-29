@@ -316,3 +316,230 @@ def addSellerColumnsX(df,X):
     df = df.reset_index(drop = True)
 
     return df
+
+
+def dataX(df, DATE, X_col, y_col, days):
+    """
+    Function to return features and output labels for a pre-specified number of days after orderDate. 
+    
+    Input:
+    - df: dataframe containing all features available at the time of ordering.
+    - DATE: column list of date variables that should be ordered on.
+    - X_col: list of column names that are to be used as features.
+    - y_col: list containing the output variable (e.g. binaryMatchClassification)
+    - days: integer number of days after orderDate that should be considered.
+    
+    Output: 
+    - X: dataframe output of features that can be used the number of days after orderDate. E.g. information on cases and deliveries are added.
+    - y: dataframe output of output labels that can be used the number of days after orderDate.
+    """    
+    
+    df = functions.addKnownColumns(df,days)
+    df = functions.addProductColumns(df,days)
+    df = functions.addSellerColumns(df,days)
+    
+    df = df[DATE + X_col + Y_col]
+    
+    df = df.dropna()
+    df = df.sort_values(by = 'orderDate')
+    df = df.reset_index(drop = True)
+    
+    X = df[X_col]
+    y = df[Y_col[0]]
+    
+    return(X,y)
+
+
+def neuralNetwork():
+    
+    model = Sequential()
+
+    model.add(Dense(units=25,activation='relu'))
+    model.add(Dense(units=3,activation='softmax')) #units should equal number of labels
+    model.compile(optimizer='adam', 
+                  loss='categorical_crossentropy', 
+                  metrics=['accuracy'])
+    return model
+
+#estimator = KerasClassifier(build_fn = neuralNetwork, epochs = 20, class_weight = class_weights, verbose = 1)
+#history = estimator.fit(X_train, y_train)
+#pd.DataFrame(history.history).plot()
+
+
+def classifyLabels(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None, days = 0):
+    """
+    Function to classify match labels using a pre-specified classifier with X and y variables. 
+    
+    Input:
+    - classifier: can be any supported classifier. E.g. DecisionTreeClassifier(random_state=0, class_weight='balanced', max_depth=10). Necessary!
+    - X: dataframe input on explanatory features. Necessary!
+    - y: dataframe input on labels. Necessary!
+    - n: number of folds to be evaluated.
+    - split: object that can take value 'Random' to make K-fold random train/test split. Default is to apply time series split.
+    - smote: boolean, if true Synthetic Minority Oversampling will be applied. Default = False.
+    - scale: object that can take values 'MinMax' or 'Standard' to scale X correspondingly. Any other input will not scale X. Default = None.
+    - days: integer number of days after orderDate that should be considered. Default = 0.
+    
+    Output: 
+    - accuracy: list of accuracies for the n evaluated classifiers.
+    - class_report: report of performance measures for the n evaluated classifiers.
+    """
+    
+    accuracy = {}
+    class_report = {}
+    count = 1
+    
+    if split == 'Random':
+        
+        kf = StratifiedKFold(n_splits = n, random_state = 0, shuffle = True)
+        for train_index, test_index in kf.split(X, y):
+
+            if scale == 'MinMax':
+                scaler = preprocessing.MinMaxScaler()
+                X_scaled = pd.DataFrame(scaler.fit_transform(X))
+                X_train, X_test = X_scaled.iloc[train_index], X_scaled.iloc[test_index]
+                y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+            elif scale == 'Standard':
+                scaler = preprocessing.StandardScaler()
+                X_scaled = pd.DataFrame(scaler.fit_transform(X))
+                X_train, X_test = X_scaled.iloc[train_index], X_scaled.iloc[test_index]
+                y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+            else:
+                X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+                y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+
+            if smote == True:
+                smote = SMOTE('not majority')
+                X_train, y_train = smote.fit_sample(X_train,y_train)
+            else:
+                X_train, y_train = X_train, y_train
+            
+            clf = classifier
+            clf = clf.fit(X_train,y_train)
+            prediction = clf.predict(X_test)
+            accuracy[count] = metrics.accuracy_score(y_test, prediction)
+            class_report[count] = metrics.classification_report(y_test, prediction)
+    
+            print(count)
+            count +=1
+    
+    else:
+        
+        tscv = TimeSeriesSplit(n_splits = n)
+        
+        for train_index, test_index in tscv.split(X):
+        
+            if scale == 'MinMax':
+                scaler = preprocessing.MinMaxScaler()
+                X_scaled = pd.DataFrame(scaler.fit_transform(X))
+                X_train, X_test = X_scaled.iloc[train_index], X_scaled.iloc[test_index]
+                y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+            elif scale == 'Standard':
+                scaler = preprocessing.StandardScaler()
+                X_scaled = pd.DataFrame(scaler.fit_transform(X))
+                X_train, X_test = X_scaled.iloc[train_index], X_scaled.iloc[test_index]
+                y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+            else:
+                X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+                y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+
+            if smote == True:
+                smote = SMOTE('not majority')
+                X_train, y_train = smote.fit_sample(X_train,y_train)
+            else:
+                X_train, y_train = X_train, y_train
+            
+            clf = classifier
+            clf = clf.fit(X_train,y_train)
+            prediction = clf.predict(X_test)
+            accuracy[count] = metrics.accuracy_score(y_test, prediction)
+            class_report[count] = metrics.classification_report(y_test, prediction)
+    
+            print(count)
+            count +=1
+
+    return(accuracy, class_report)
+
+
+def classifyLabelsNew(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None, NN = False):
+
+    labels = np.unique(y)
+    int_label_mapping = dict(enumerate(labels))
+    label_int_mapping = {y:x for x,y in int_label_mapping.items()}
+    
+    acc,pre,rec,f1,results = {},{},{},{},{}
+        
+    if split == 'Random':
+        cv = StratifiedKFold(n_splits = n, random_state = 0, shuffle = True)   
+    else:
+        cv = TimeSeriesSplit(n_splits = n)
+        
+    if NN == True:
+        y_encoded = y.map(label_int_mapping)
+        y_dummy = pd.DataFrame(np_utils.to_categorical(y_encoded))
+    
+    count = 1
+
+    for train_index, test_index in cv.split(X):
+        
+        if scale != None:
+            X_scaled = pd.DataFrame(scaler.fit_transform(X))
+            X_train, X_test = X_scaled.iloc[train_index], X_scaled.iloc[test_index]
+        else:   
+            X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        
+        clf = classifier
+        
+        if NN == True:
+            class_weights = class_weight.compute_class_weight('balanced',labels,y.iloc[train_index])
+            class_weights = dict(enumerate(class_weights))
+            clf.set_params(class_weight = class_weights)
+            y_train, y_test = y_dummy.iloc[train_index], y.iloc[test_index]
+        else:
+            y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        
+        clf.fit(X_train,y_train)
+        y_pred = clf.predict(X_test)
+        
+        if NN == True:
+            y_pred = pd.Series(y_pred).map(int_label_mapping)
+        
+        accuracy = accuracy_score(y_test, y_pred)
+        scores = precision_recall_fscore_support(y_test, y_pred, average = None, labels = labels, beta = 1)
+        
+        acc[count] = accuracy
+        pre[count] = scores[0]
+        rec[count] = scores[1]
+        f1[count] = scores[2]
+        
+        count += 1
+
+    results['accuracy'] = sum(acc.values()) / n
+    
+    for ix,label in enumerate(labels):
+        results[('precision_'+label)] = (sum(pre.values()) / n)[ix]
+        results[('recall_'+label)] = (sum(rec.values()) / n)[ix]
+        results[('f1_'+label)] = (sum(f1.values()) / n)[ix]
+     
+    return results
+
+
+def classifyLabelsQuick(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None, days = 0):
+    
+    accuracy = {}
+    class_report = {}
+    
+    if split == 'Random':
+        split_type = StratifiedKFold(n_splits = n, random_state = 0, shuffle = True)
+        
+    else:
+        split_type = TimeSeriesSplit(n_splits = n)
+    
+    #Create pipeline -> everything in the pipeline is executed after eachother
+    pipe = Pipeline([('scaler', preprocessing.MinMaxScaler()), ('classifier', classifier)])
+    
+    #Cross validation function which outputs the accuracy and average (unweighted) precision & recall of labels
+    metrics = ('accuracy','precision_macro','recall_macro','f1_macro','f1_weighted')
+    y_pred = cross_validate(pipe, X, y, cv = split_type, scoring = metrics, return_train_score = True)
+        
+    return y_pred
