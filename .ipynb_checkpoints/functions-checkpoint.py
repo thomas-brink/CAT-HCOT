@@ -3,7 +3,49 @@
 
 import pandas as pd
 import numpy as np
-from datetime import timedelta
+import pyodbc as py
+
+import warnings
+warnings.filterwarnings('ignore')
+
+from datetime import date, timedelta, datetime
+import time
+
+from sklearn import preprocessing
+from sklearn.utils import class_weight
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import cross_validate, cross_val_score
+from sklearn.pipeline import Pipeline
+
+from sklearn import neighbors
+from sklearn import svm
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import BaggingClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.experimental import enable_hist_gradient_boosting
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn import metrics
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+
+from imblearn.over_sampling import SMOTE
+
+import keras
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense,Activation,Dropout
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
+from keras.utils import np_utils
+
 
 def addKnownColumns(df,X):
     """
@@ -334,18 +376,18 @@ def dataX(df, DATE, X_col, y_col, days):
     - y: dataframe output of output labels that can be used the number of days after orderDate.
     """    
     
-    df = functions.addKnownColumns(df,days)
-    df = functions.addProductColumns(df,days)
-    df = functions.addSellerColumns(df,days)
+    df = addKnownColumns(df,days)
+    df = addProductColumns(df,days)
+    df = addSellerColumns(df,days)
     
-    df = df[DATE + X_col + Y_col]
+    df = df[DATE + X_col + y_col]
     
     df = df.dropna()
     df = df.sort_values(by = 'orderDate')
     df = df.reset_index(drop = True)
     
     X = df[X_col]
-    y = df[Y_col[0]]
+    y = df[y_col[0]]
     
     return(X,y)
 
@@ -366,7 +408,7 @@ def neuralNetwork():
 #pd.DataFrame(history.history).plot()
 
 
-def classifyLabels(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None, days = 0):
+def classifyLabels(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None):
     """
     Function to classify match labels using a pre-specified classifier with X and y variables. 
     
@@ -504,8 +546,8 @@ def classifyLabelsNew(classifier, X, y, n, split = 'TimeSeries', smote = False, 
         if NN == True:
             y_pred = pd.Series(y_pred).map(int_label_mapping)
         
-        accuracy = accuracy_score(y_test, y_pred)
-        scores = precision_recall_fscore_support(y_test, y_pred, average = None, labels = labels, beta = 1)
+        accuracy = metrics.accuracy_score(y_test, y_pred)
+        scores = metrics.precision_recall_fscore_support(y_test, y_pred, average = None, labels = labels, beta = 1)
         
         acc[count] = accuracy
         pre[count] = scores[0]
@@ -524,7 +566,7 @@ def classifyLabelsNew(classifier, X, y, n, split = 'TimeSeries', smote = False, 
     return results
 
 
-def classifyLabelsQuick(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None, days = 0):
+def classifyLabelsQuick(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None):
     
     accuracy = {}
     class_report = {}
