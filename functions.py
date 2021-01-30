@@ -362,7 +362,7 @@ def addSellerColumnsX(df,X):
 
 def addHistoricPerformance(df, variable = 'transporterCode', X = 0): 
     """
-    Function to add 3 columns: 'historic_happy', 'historic_unhappy', 'historic_unknown'.
+    Function to add 3 columns: '[variable]HistoricHappyX', '[variable]HistoricUnhappyX', '[variable]HistoricUnknownX'.
     Input: dataFrame with columns: variable*,'orderDate','generalMatchClassification'.
     
     Input for X is how many days after the order date that the prediction is made. Default is immediately after the order, i.e., X = 0.
@@ -370,65 +370,60 @@ def addHistoricPerformance(df, variable = 'transporterCode', X = 0):
     * Variable can be any descriptive variable, e.g., 'sellerId', 'transporterCode', 'productGroup'. Default is 'transporterCode'.
     """
     # Check if the variables already exist. If so, drop them.
-    if variable+'HistoricHhappyX'   in list(df.columns): df = df.drop([variable+'HistoricHappyX'],   axis=1)
+    if variable+'HistoricHappyX'   in list(df.columns): df = df.drop([variable+'HistoricHappyX'],   axis=1)
     if variable+'HistoricUnhappyX' in list(df.columns): df = df.drop([variable+'HistoricUnhappyX'], axis=1)
     if variable+'HistoricUnknownX' in list(df.columns): df = df.drop([variable+'HistoricUnknownX'], axis=1)   
     
     # Correct sorting
-    df = df.sort_values(by = [variable,'orderDate'].reset_index(drop = True)
+    df = df.sort_values(by = [variable,'orderDate'])
+    df = df.reset_index(drop = True)
     
     # Prep the needed dataset
-    df_     = df[[variable,'orderDate','generalMatchClassification']]
-    one_hot = pd.get_dummies(df_['generalMatchClassification'])
-    df_     = df_.join(one_hot)
-    df_     = df_.drop('generalMatchClassification', axis=1)
-    df_     = df_.fillna('UNKNOWN') #So far only for transporterCode, hence the datatype string. If that changes, this needs to be updated as well
+    one_hot      = pd.get_dummies(df['generalMatchClassification'])
+    df           = df.join(one_hot)
+    df[variable] = df[variable].fillna('UNKNOWN') #So far only for transporterCode, hence the datatype string. If that changes, this needs to be updated as well
     
     # STEP 1: Add the prediction and finalized dates
-    df_['dateFinal']      = df_['orderDate'] + timedelta(days = 30)
-    df_['predictionDate'] = df_['orderDate'] + timedelta(days = X)
+    df['dateFinal']      = df['orderDate'] + timedelta(days = 30)
+    df['predictionDate'] = df['orderDate'] + timedelta(days = X)
 
-    # STEP 2: Re-order columns
-    df_ = df_[[variable, 'orderDate', 'predictionDate', 'dateFinal', 'HAPPY', 'UNHAPPY', 'UNKNOWN']]
+    # STEP 2: Gather all dates for which you know (dateFinal) and need to know (predictionDate) something, sort and drop duplicates
+    dates = pd.concat([df[[variable, 'predictionDate']].rename(columns={'predictionDate': 'date'}), df[[variable, 'dateFinal']].rename(columns={'dateFinal': 'date'})])
+    dates = dates.sort_values([variable, 'date'])
+    dates = dates.drop_duplicates(keep = 'first')
+    dates = dates.reset_index(drop = True)
 
-    # STEP 3: Gather all dates for which you know (dateFinal) and need to know (predictionDate) something, sort and drop duplicates
-    dates = pd.concat([df_[[variable, 'predictionDate']].rename(columns={'predictionDate': 'date'}) ,df_[[variable, 'dateFinal']].rename(columns={'dateFinal': 'date'})])
-    dates = dates.sort_values([variable, 'date']).drop_duplicates(keep = 'first').reset_index(drop = True)
+    # STEP 3: Join the table with orders (df) left on the table with dates (dates) (match dateFinal (df) to date (dates))
+    dic = pd.merge(left = dates, right = df[[variable, 'dateFinal', 'HAPPY', 'UNHAPPY', 'UNKNOWN']], how = 'left', left_on = [variable, 'date'], right_on = [variable, 'dateFinal'])
+    dic = dic.drop('dateFinal', axis=1)
+    dic = dic.rename(columns={'date': 'dateFinal'})
+    dic = dic.fillna(0)
 
-    # STEP 4: Join the table with orders (df_) left on the table with dates (dates) (match dateFinal (df_) to date (dates))
-    df_dic = pd.merge(left = dates, right = df_, how = 'left', left_on = [variable, 'date'], right_on = [variable, 'dateFinal'])
-    df_dic = df_dic.drop(['orderDate', 'predictionDate', 'dateFinal'], axis=1).rename(columns={'date': 'dateFinal'})
-    df_dic = df_dic.fillna(0)
-
-    # STEP 5: Per sellerId find the cumulative sum of happy, unhappy, unknown, and total orders over time
-    NO_happy_orders   = df_dic.groupby([variable,'dateFinal']).HAPPY.sum().groupby(variable).cumsum().reset_index(drop = True)
-    NO_unknown_orders = df_dic.groupby([variable,'dateFinal']).UNKNOWN.sum().groupby(variable).cumsum().reset_index(drop = True)
-    NO_unhappy_orders = df_dic.groupby([variable,'dateFinal']).UNHAPPY.sum().groupby(variable).cumsum().reset_index(drop = True)
+    # STEP 4: Per sellerId find the cumulative sum of happy, unhappy, unknown, and total orders over time
+    NO_happy_orders   = dic.groupby([variable,'dateFinal']).HAPPY.sum().groupby(variable).cumsum().reset_index(drop = True)
+    NO_unknown_orders = dic.groupby([variable,'dateFinal']).UNKNOWN.sum().groupby(variable).cumsum().reset_index(drop = True)
+    NO_unhappy_orders = dic.groupby([variable,'dateFinal']).UNHAPPY.sum().groupby(variable).cumsum().reset_index(drop = True)
     NO_orders         = NO_happy_orders + NO_unknown_orders + NO_unhappy_orders
 
-    # STEP 6: The NO_[type of order] (e.g., number of happy orders) variables are without duplicates; put into one table
-    dates_2 = df_dic[[variable, 'dateFinal']].drop_duplicates(keep = 'first').reset_index(drop = True)
+    # STEP 5: The NO_[type of order] (e.g., number of happy orders) variables are without duplicates; put into dictionary
+    dic = dic[[variable, 'dateFinal']]
+    dic = dic.drop_duplicates(keep = 'first')
+    dic = dic.reset_index(drop = True)
+    dic = dic.rename(columns={variable: variable+'_', 'dateFinal': 'dateFinal_'})
 
-    performance = pd.DataFrame(data={variable+'_'               : dates_2[variable],
-                                     'dateFinal_'               : dates_2['dateFinal'],
-                                     'NO_orders'                : NO_orders,
-                                     'NO_happy'                 : NO_happy_orders,
-                                     'NO_unhappy'               : NO_unhappy_orders,
-                                     'NO_unknown'               : NO_unknown_orders,
-                                     variable+'HistoricHappyX'  : round((NO_happy_orders  /NO_orders)*100, 2), 
-                                     variable+'HistoricUnhappyX': round((NO_unhappy_orders/NO_orders)*100, 2), 
-                                     variable+'HistoricUnknownX': round((NO_unknown_orders/NO_orders)*100, 2)})
+    dic[variable+'HistoricHappyX']   = round((NO_happy_orders  /NO_orders)*100, 2)
+    dic[variable+'HistoricUnhappyX'] = round((NO_unhappy_orders/NO_orders)*100, 2)
+    dic[variable+'HistoricUnknownX'] = round((NO_unknown_orders/NO_orders)*100, 2)
 
-    performance = performance.fillna(0)
+    dic = dic.fillna(0)
 
-    # STEP 7: Join the performance table (with the dates corresponding to the finalized dates) with the orders (df_; on orderDate)
-    finished = pd.merge(left = df_, right = performance, how = 'left', left_on = [variable, 'predictionDate'], right_on = [variable+'_', 'dateFinal_'])
-    
-    # STEP 8: Put created variables into dataframe
-    return_df = pd.concat([df, finished.drop([variable, 'orderDate', 'predictionDate', 'dateFinal', 'HAPPY', 'UNHAPPY', 'UNKNOWN',
-                                              variable+'_', 'dateFinal_', 'NO_orders', 'NO_happy', 'NO_unhappy', 'NO_unknown'], axis = 1)], axis = 1)
-    
-    return(return_df.sort_values(by = ['productId','orderDate'], ascending = [True, True]).reset_index(drop = True))
+    # STEP 6: Join the dictionary (dic; on dateFinal) with the orders (df; on predictionDate)
+    df = df.drop(['dateFinal', 'HAPPY', 'UNHAPPY', 'UNKNOWN'], axis = 1)
+
+    df = pd.merge(left = df, right = dic, how = 'left', left_on = [variable, 'predictionDate'], right_on = [variable+'_', 'dateFinal_'])
+    df = df.drop([variable+'_', 'dateFinal_', 'predictionDate'], axis = 1)
+     
+    return(df)
 
 
 def dataX(df, DATE, X_col, y_col, days):
