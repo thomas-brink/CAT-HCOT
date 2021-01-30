@@ -370,13 +370,12 @@ def addHistoricPerformance(df, variable = 'transporterCode', X = 0):
     * Variable can be any descriptive variable, e.g., 'sellerId', 'transporterCode', 'productGroup'. Default is 'transporterCode'.
     """
     # Check if the variables already exist. If so, drop them.
-    if variable+'_historic_happy'   in list(df.columns): df = df.drop([variable+'_historic_happy'],   axis=1)
-    if variable+'_historic_unhappy' in list(df.columns): df = df.drop([variable+'_historic_unhappy'], axis=1)
-    if variable+'_historic_unknown' in list(df.columns): df = df.drop([variable+'_historic_unknown'], axis=1)   
+    if variable+'HistoricHhappyX'   in list(df.columns): df = df.drop([variable+'HistoricHappyX'],   axis=1)
+    if variable+'HistoricUnhappyX' in list(df.columns): df = df.drop([variable+'HistoricUnhappyX'], axis=1)
+    if variable+'HistoricUnknownX' in list(df.columns): df = df.drop([variable+'HistoricUnknownX'], axis=1)   
     
     # Correct sorting
-    df = df.sort_values(by = [variable,'orderDate'])
-    df = df.reset_index(drop = True)
+    df = df.sort_values(by = [variable,'orderDate'].reset_index(drop = True)
     
     # Prep the needed dataset
     df_     = df[[variable,'orderDate','generalMatchClassification']]
@@ -385,14 +384,14 @@ def addHistoricPerformance(df, variable = 'transporterCode', X = 0):
     df_     = df_.drop('generalMatchClassification', axis=1)
     df_     = df_.fillna('UNKNOWN') #So far only for transporterCode, hence the datatype string. If that changes, this needs to be updated as well
     
-    # STEP 1: Add the finalized dates
+    # STEP 1: Add the prediction and finalized dates
     df_['dateFinal']      = df_['orderDate'] + timedelta(days = 30)
     df_['predictionDate'] = df_['orderDate'] + timedelta(days = X)
 
     # STEP 2: Re-order columns
     df_ = df_[[variable, 'orderDate', 'predictionDate', 'dateFinal', 'HAPPY', 'UNHAPPY', 'UNKNOWN']]
 
-    # STEP 3: Gather all dates, sort and drop duplicates
+    # STEP 3: Gather all dates for which you know (dateFinal) and need to know (predictionDate) something, sort and drop duplicates
     dates = pd.concat([df_[[variable, 'predictionDate']].rename(columns={'predictionDate': 'date'}) ,df_[[variable, 'dateFinal']].rename(columns={'dateFinal': 'date'})])
     dates = dates.sort_values([variable, 'date']).drop_duplicates(keep = 'first').reset_index(drop = True)
 
@@ -410,15 +409,15 @@ def addHistoricPerformance(df, variable = 'transporterCode', X = 0):
     # STEP 6: The NO_[type of order] (e.g., number of happy orders) variables are without duplicates; put into one table
     dates_2 = df_dic[[variable, 'dateFinal']].drop_duplicates(keep = 'first').reset_index(drop = True)
 
-    performance = pd.DataFrame(data={variable+'_'                : dates_2[variable],
-                                     'dateFinal_'                : dates_2['dateFinal'],
-                                     'NO_orders'                 : NO_orders,
-                                     'NO_happy'                  : NO_happy_orders,
-                                     'NO_unhappy'                : NO_unhappy_orders,
-                                     'NO_unknown'                : NO_unknown_orders,
-                                     variable+'_historic_happy'  : round((NO_happy_orders  /NO_orders)*100, 2), 
-                                     variable+'_historic_unhappy': round((NO_unhappy_orders/NO_orders)*100, 2), 
-                                     variable+'_historic_unknown': round((NO_unknown_orders/NO_orders)*100, 2)})
+    performance = pd.DataFrame(data={variable+'_'               : dates_2[variable],
+                                     'dateFinal_'               : dates_2['dateFinal'],
+                                     'NO_orders'                : NO_orders,
+                                     'NO_happy'                 : NO_happy_orders,
+                                     'NO_unhappy'               : NO_unhappy_orders,
+                                     'NO_unknown'               : NO_unknown_orders,
+                                     variable+'HistoricHappyX'  : round((NO_happy_orders  /NO_orders)*100, 2), 
+                                     variable+'HistoricUnhappyX': round((NO_unhappy_orders/NO_orders)*100, 2), 
+                                     variable+'HistoricUnknownX': round((NO_unknown_orders/NO_orders)*100, 2)})
 
     performance = performance.fillna(0)
 
@@ -426,11 +425,10 @@ def addHistoricPerformance(df, variable = 'transporterCode', X = 0):
     finished = pd.merge(left = df_, right = performance, how = 'left', left_on = [variable, 'predictionDate'], right_on = [variable+'_', 'dateFinal_'])
     
     # STEP 8: Put created variables into dataframe
-    return_df = pd.concat([df, finished.rename(columns = {variable: variable+'_f', 'orderDate': 'orderDate_f'})], axis = 1)
+    return_df = pd.concat([df, finished.drop([variable, 'orderDate', 'predictionDate', 'dateFinal', 'HAPPY', 'UNHAPPY', 'UNKNOWN',
+                                              variable+'_', 'dateFinal_', 'NO_orders', 'NO_happy', 'NO_unhappy', 'NO_unknown'], axis = 1)], axis = 1)
     
-    return(return_df.drop([variable+'_f', 'orderDate_f', 'predictionDate', 'dateFinal', 
-                           'HAPPY', 'UNHAPPY', 'UNKNOWN', variable+'_', 'dateFinal_', 
-                           'NO_orders', 'NO_happy', 'NO_unhappy', 'NO_unknown'], axis=1).sort_values(by = ['productId','orderDate'], ascending = [True, True]).reset_index(drop = True))
+    return(return_df.sort_values(by = ['productId','orderDate'], ascending = [True, True]).reset_index(drop = True))
 
 
 def dataX(df, DATE, X_col, y_col, days):
