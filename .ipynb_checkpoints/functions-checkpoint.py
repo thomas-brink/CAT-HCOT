@@ -60,7 +60,7 @@ def addKnownColumns(df,X):
     df['cancellationKnownX']   = df['cancellationDays'].apply(lambda x: True if x <= X else False)
     
     df['onTimeDeliveryKnownX'] = ((df_[:,0] <= X) & (df_[:,1] == True))
-    df['lateDeliveryKnownX'] = ((df_[:,0] <= X) & (df_[:,1] == False))
+    df['lateDeliveryKnownX']   = ((df_[:,0] <= X) & (df_[:,1] == False))
     
     # df['onTimeDeliveryKnownX'] = df.apply(lambda row: True if ((row.actualDeliveryDays <= X) and (row.onTimeDelivery == True)) else False, axis = 1)
     # df['lateDeliveryKnownX']   = df.apply(lambda row: True if ((row.actualDeliveryDays <= X) and (row.onTimeDelivery == False)) else False, axis = 1)
@@ -85,9 +85,9 @@ def addProductColumns(df,X):
         
     else:
         
-        df['productOrderCountX'] = df['productOrderCount0']
-        df['productTotalCountX'] = df['productTotalCount0']
-        df['productTotalReturnedX'] = df['productTotalReturned0']
+        df['productOrderCountX']     = df['productOrderCount0']
+        df['productTotalCountX']     = df['productTotalCount0']
+        df['productTotalReturnedX']  = df['productTotalReturned0']
         df['productReturnFractionX'] = df['productReturnFraction0']
         
     return df
@@ -192,9 +192,9 @@ def addProductColumns0(df):
                                 how = 'left').productTotalReturned_y
      
     #Add new columns to dataFrame    
-    df['productOrderCount0'] = productOrderCount
-    df['productTotalCount0'] = productTotalCount
-    df['productTotalReturned0'] = productTotalReturned
+    df['productOrderCount0']     = productOrderCount
+    df['productTotalCount0']     = productTotalCount
+    df['productTotalReturned0']  = productTotalReturned
     df['productReturnFraction0'] = productTotalReturned / productTotalCount
     
     return(df)
@@ -255,9 +255,9 @@ def addProductColumnsX(df,X):
             previousMaxDate = row[2]
             previousID = row[1]
 
-    df['productOrderCountX'] = knownProductInfo[:,0]
-    df['productTotalCountX'] = knownProductInfo[:,1]
-    df['productTotalReturnedX'] = knownProductInfo[:,2]
+    df['productOrderCountX']     = knownProductInfo[:,0]
+    df['productTotalCountX']     = knownProductInfo[:,1]
+    df['productTotalReturnedX']  = knownProductInfo[:,2]
     df['productReturnFractionX'] = knownProductInfo[:,2] / knownProductInfo[:,1]
     
     #Reverse to natural order
@@ -358,6 +358,79 @@ def addSellerColumnsX(df,X):
     df = df.reset_index(drop = True)
 
     return df
+
+
+def addHistoricPerformance(df, variable = 'transporterCode', X = 0): 
+    """
+    Function to add 3 columns: 'historic_happy', 'historic_unhappy', 'historic_unknown'.
+    Input: dataFrame with columns: variable*,'orderDate','generalMatchClassification'.
+    
+    Input for X is how many days after the order date that the prediction is made. Default is immediately after the order, i.e., X = 0.
+    
+    * Variable can be any descriptive variable, e.g., 'sellerId', 'transporterCode', 'productGroup'. Default is 'transporterCode'.
+    """
+    # Check if the variables already exist. If so, drop them.
+    if variable+'_historic_happy'   in list(df.columns): df = df.drop([variable+'_historic_happy'],   axis=1)
+    if variable+'_historic_unhappy' in list(df.columns): df = df.drop([variable+'_historic_unhappy'], axis=1)
+    if variable+'_historic_unknown' in list(df.columns): df = df.drop([variable+'_historic_unknown'], axis=1)   
+    
+    # Correct sorting
+    df = df.sort_values(by = [variable,'orderDate'])
+    df = df.reset_index(drop = True)
+    
+    # Prep the needed dataset
+    df_     = df[[variable,'orderDate','generalMatchClassification']]
+    one_hot = pd.get_dummies(df_['generalMatchClassification'])
+    df_     = df_.join(one_hot)
+    df_     = df_.drop('generalMatchClassification', axis=1)
+    df_     = df_.fillna('UNKNOWN') #So far only for transporterCode, hence the datatype string. If that changes, this needs to be updated as well
+    
+    # STEP 1: Add the finalized dates
+    df_['dateFinal']      = df_['orderDate'] + timedelta(days = 30)
+    df_['predictionDate'] = df_['orderDate'] + timedelta(days = X)
+
+    # STEP 2: Re-order columns
+    df_ = df_[[variable, 'orderDate', 'predictionDate', 'dateFinal', 'HAPPY', 'UNHAPPY', 'UNKNOWN']]
+
+    # STEP 3: Gather all dates, sort and drop duplicates
+    dates = pd.concat([df_[[variable, 'predictionDate']].rename(columns={'predictionDate': 'date'}) ,df_[[variable, 'dateFinal']].rename(columns={'dateFinal': 'date'})])
+    dates = dates.sort_values([variable, 'date']).drop_duplicates(keep = 'first').reset_index(drop = True)
+
+    # STEP 4: Join the table with orders (df_) left on the table with dates (dates) (match dateFinal (df_) to date (dates))
+    df_dic = pd.merge(left = dates, right = df_, how = 'left', left_on = [variable, 'date'], right_on = [variable, 'dateFinal'])
+    df_dic = df_dic.drop(['orderDate', 'predictionDate', 'dateFinal'], axis=1).rename(columns={'date': 'dateFinal'})
+    df_dic = df_dic.fillna(0)
+
+    # STEP 5: Per sellerId find the cumulative sum of happy, unhappy, unknown, and total orders over time
+    NO_happy_orders   = df_dic.groupby([variable,'dateFinal']).HAPPY.sum().groupby(variable).cumsum().reset_index(drop = True)
+    NO_unknown_orders = df_dic.groupby([variable,'dateFinal']).UNKNOWN.sum().groupby(variable).cumsum().reset_index(drop = True)
+    NO_unhappy_orders = df_dic.groupby([variable,'dateFinal']).UNHAPPY.sum().groupby(variable).cumsum().reset_index(drop = True)
+    NO_orders         = NO_happy_orders + NO_unknown_orders + NO_unhappy_orders
+
+    # STEP 6: The NO_[type of order] (e.g., number of happy orders) variables are without duplicates; put into one table
+    dates_2 = df_dic[[variable, 'dateFinal']].drop_duplicates(keep = 'first').reset_index(drop = True)
+
+    performance = pd.DataFrame(data={variable+'_'                : dates_2[variable],
+                                     'dateFinal_'                : dates_2['dateFinal'],
+                                     'NO_orders'                 : NO_orders,
+                                     'NO_happy'                  : NO_happy_orders,
+                                     'NO_unhappy'                : NO_unhappy_orders,
+                                     'NO_unknown'                : NO_unknown_orders,
+                                     variable+'_historic_happy'  : round((NO_happy_orders  /NO_orders)*100, 2), 
+                                     variable+'_historic_unhappy': round((NO_unhappy_orders/NO_orders)*100, 2), 
+                                     variable+'_historic_unknown': round((NO_unknown_orders/NO_orders)*100, 2)})
+
+    performance = performance.fillna(0)
+
+    # STEP 7: Join the performance table (with the dates corresponding to the finalized dates) with the orders (df_; on orderDate)
+    finished = pd.merge(left = df_, right = performance, how = 'left', left_on = [variable, 'predictionDate'], right_on = [variable+'_', 'dateFinal_'])
+    
+    # STEP 8: Put created variables into dataframe
+    return_df = pd.concat([df, finished.rename(columns = {variable: variable+'_f', 'orderDate': 'orderDate_f'})], axis = 1)
+    
+    return(return_df.drop([variable+'_f', 'orderDate_f', 'predictionDate', 'dateFinal', 
+                           'HAPPY', 'UNHAPPY', 'UNKNOWN', variable+'_', 'dateFinal_', 
+                           'NO_orders', 'NO_happy', 'NO_unhappy', 'NO_unknown'], axis=1).sort_values(by = ['productId','orderDate'], ascending = [True, True]).reset_index(drop = True))
 
 
 def dataX(df, DATE, X_col, y_col, days):
