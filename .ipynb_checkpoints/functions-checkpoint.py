@@ -445,6 +445,7 @@ def dataX(df, DATE, X_col, y_col, days):
     df = addKnownColumns(df,days)
     df = addProductColumns(df,days)
     df = addSellerColumns(df,days)
+    df = addHistoricPerformance(df,'transporterCode',days)
     
     df = df[DATE + X_col + y_col]
     
