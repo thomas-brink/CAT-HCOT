@@ -505,6 +505,7 @@ def classifyLabels(classifier, X, y, n, split = 'TimeSeries', smote = False, sca
 
 def classifyLabelsNew(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None, NN = False):
 
+    scaler = preprocessing.MinMaxScaler()
     labels = np.unique(y)
     int_label_mapping = dict(enumerate(labels))
     label_int_mapping = {y:x for x,y in int_label_mapping.items()}
