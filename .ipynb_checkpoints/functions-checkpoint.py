@@ -426,7 +426,7 @@ def addHistoricPerformance(df, variable = 'transporterCode', X = 0):
     return(df)
 
 
-def dataX(df, DATE, X_col, y_col, days):
+def dataX(df, DATE, X_col, y_col, historic_variable, days):
     """
     Function to return features and output labels for a pre-specified number of days after orderDate. 
     
@@ -435,6 +435,7 @@ def dataX(df, DATE, X_col, y_col, days):
     - DATE: column list of date variables that should be ordered on.
     - X_col: list of column names that are to be used as features.
     - y_col: list containing the output variable (e.g. binaryMatchClassification)
+    - historic_variable: list containing the variables for which historic performance should be used
     - days: integer number of days after orderDate that should be considered.
     
     Output: 
@@ -445,7 +446,8 @@ def dataX(df, DATE, X_col, y_col, days):
     df = addKnownColumns(df,days)
     df = addProductColumns(df,days)
     df = addSellerColumns(df,days)
-    df = addHistoricPerformance(df,'transporterCode',days)
+    for i in range(len(historic_variable)):
+        df = addHistoricPerformance(df,historic_variable[i],days)
     
     df = df[DATE + X_col + y_col]
     
