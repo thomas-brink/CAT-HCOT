@@ -456,7 +456,7 @@ def dataX(df, DATE, X_col, y_col, historic_variable, days):
     df = df.reset_index(drop = True)
     
     X = df[X_col]
-    y = df[y_col[0]]
+    y = df[y_col]
     
     return(X,y)
 
