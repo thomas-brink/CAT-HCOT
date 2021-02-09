@@ -456,7 +456,7 @@ def dataX(df, DATE, X_col, y_col, historic_variable, days):
     df = df.reset_index(drop = True)
     
     X = df[X_col]
-    y = df[y_col]
+    y = df[y_col[0]]
     
     return(X,y)
 
@@ -466,7 +466,8 @@ def neuralNetwork():
     model = Sequential()
 
     model.add(Dense(units=25,activation='relu'))
-    model.add(Dense(units=3,activation='softmax')) #units should equal number of labels
+   # model.add(Dense(units=3,activation='softmax')) #units should equal number of labels
+    model.add(Dense(units=5,activation='softmax')) #units should equal number of labels
     model.compile(optimizer='adam', 
                   loss='categorical_crossentropy', 
                   metrics=['accuracy'])
