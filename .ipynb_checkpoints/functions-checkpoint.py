@@ -146,7 +146,7 @@ def addProductColumns0(df):
         if row[0] == 0:                                    # row[5] = returnDateTime
             
             #update return dictionary if this product is returned
-            if np.isnan(row[4]) == False:
+            if np.isnan(row[4]) == True:
                 if row[5] in returnDic:
                     returnDic[row[5]] += row[4]
                 else:
@@ -157,7 +157,7 @@ def addProductColumns0(df):
         elif (previousID == row[1]):
             
             #update return dictionary if this product is returned
-            if np.isnan(row[4]) == False:
+            if np.isnan(row[4]) == True:
                 if row[5] in returnDic:
                     returnDic[row[5]] += row[4]
                 else:
@@ -176,7 +176,7 @@ def addProductColumns0(df):
             returnDic = {} #new productId, hence empty the return dictionary
             
             #update return dictionary if this product is returned
-            if np.isnan(row[4]) == False:
+            if np.isnan(row[4]) == True:
                 if row[5] in returnDic:
                     returnDic[row[5]] += row[4]
                 else:
