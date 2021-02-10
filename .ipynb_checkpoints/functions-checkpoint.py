@@ -456,7 +456,7 @@ def dataX(df, DATE, X_col, y_col, historic_variable, days):
     df = df.reset_index(drop = True)
     
     X = df[X_col]
-    y = df[y_col[0]]
+    y = df[y_col]
     
     return(X,y)
 
@@ -575,7 +575,11 @@ def classifyLabels(classifier, X, y, n, split = 'TimeSeries', smote = False, sca
 
 def classifyLabelsNew(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None, NN = False):
 
-    scaler = preprocessing.MinMaxScaler()
+    if scale == 'MinMax':
+        scaler = preprocessing.MinMaxScaler()
+    elif scale == 'Standard':
+        scaler = preprocessing.StandardScaler()
+    
     labels = np.unique(y)
     int_label_mapping = dict(enumerate(labels))
     label_int_mapping = {y:x for x,y in int_label_mapping.items()}
