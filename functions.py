@@ -467,7 +467,7 @@ def neuralNetwork():
 
     model.add(Dense(units=25,activation='relu'))
    # model.add(Dense(units=3,activation='softmax')) #units should equal number of labels
-    model.add(Dense(units=5,activation='softmax')) #units should equal number of labels
+    model.add(Dense(units=3,activation='softmax')) #units should equal number of labels
     model.compile(optimizer='adam', 
                   loss='categorical_crossentropy', 
                   metrics=['accuracy'])
@@ -575,7 +575,11 @@ def classifyLabels(classifier, X, y, n, split = 'TimeSeries', smote = False, sca
 
 def classifyLabelsNew(classifier, X, y, n, split = 'TimeSeries', smote = False, scale = None, NN = False):
 
-    scaler = preprocessing.MinMaxScaler()
+    if scale == 'MinMax':
+        scaler = preprocessing.MinMaxScaler()
+    elif scale == 'Standard':
+        scaler = preprocessing.StandardScaler()
+    
     labels = np.unique(y)
     int_label_mapping = dict(enumerate(labels))
     label_int_mapping = {y:x for x,y in int_label_mapping.items()}
