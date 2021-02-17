@@ -461,16 +461,27 @@ def dataX(df, DATE, X_col, y_col, historic_variable, days):
     return(X,y)
 
 
-def neuralNetwork():
+def neuralNetwork(output, nodes, layers, droprate):
     
     model = Sequential()
 
-    model.add(Dense(units=25,activation='relu'))
-   # model.add(Dense(units=3,activation='softmax')) #units should equal number of labels
-    model.add(Dense(units=3,activation='softmax')) #units should equal number of labels
-    model.compile(optimizer='adam', 
-                  loss='categorical_crossentropy', 
-                  metrics=['accuracy'])
+    model.add(Dense(units = nodes, activation = 'relu'))
+
+    for i in range(1,layers+1):
+        model.add(Dense(units = nodes, activation = 'relu'))
+        model.add(Dropout(droprate))
+
+    model.add(Dense(units = output, activation = 'softmax')) #units should equal number of labels
+
+    if output == 2:
+        loss = 'binary_crossentropy'
+    else:
+        loss = 'categorical_crossentropy'
+        
+    model.compile(optimizer = 'adam', 
+                  loss = loss, 
+                  metrics = ['accuracy'])
+
     return model
 
 #estimator = KerasClassifier(build_fn = neuralNetwork, epochs = 20, class_weight = class_weights, verbose = 1)
