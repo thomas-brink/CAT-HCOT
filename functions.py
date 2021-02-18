@@ -471,13 +471,13 @@ def neuralNetwork(output, nodes, layers, droprate):
         model.add(Dense(units = nodes, activation = 'relu'))
         model.add(Dropout(droprate))
 
-    model.add(Dense(units = output, activation = 'softmax')) #units should equal number of labels
-
-    if output == 2:
-        loss = 'binary_crossentropy'
+    if output == 1:
+    	model.add(Dense(units = output, activation = 'sigmoid'))
+    	loss = 'binary_crossentropy'
     else:
-        loss = 'categorical_crossentropy'
-        
+    	model.add(Dense(units = output, activation = 'softmax'))
+    	loss = 'categorical_crossentropy'
+		
     model.compile(optimizer = 'adam', 
                   loss = loss, 
                   metrics = ['accuracy'])
