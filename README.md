@@ -24,14 +24,14 @@ This file includes the complete HCOT algoritm
 - dynamicHierarchicalClassifier:
 - ClassHierarchy:
 
-# CAT
+## CAT
 
 This file includes the CAT algorithm
 
-# Validation
+## Validation
 
 This file includes the validation procedure for HCOT and flat CAT-HCOT (baseline)
 
-# Baselines
+## Baselines
 
 This file includes the baseline methods: static HCOT and flat CAT-HCOT
