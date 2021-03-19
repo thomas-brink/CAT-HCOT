@@ -426,3 +426,50 @@ def dataX(df, DATE, X_col, y_col, historic_variable, days):
     y = df[y_col]
     
     return(X,y)
+
+
+def initialiseData():
+    
+    # Load in the cleaned and prepared data as obtained through the 'Data_Cleaning_Preparation' file
+    df = pd.read_csv('/Users/thoma/Documents/seminar_data/cleaned_prepared_data.csv', low_memory = True)
+    
+    df['orderDate']                   = pd.to_datetime(df['orderDate'])
+    df['cancellationDate']            = pd.to_datetime(df['cancellationDate'])
+    df['promisedDeliveryDate']        = pd.to_datetime(df['promisedDeliveryDate'])
+    df['shipmentDate']                = pd.to_datetime(df['shipmentDate'])
+    df['dateTimeFirstDeliveryMoment'] = pd.to_datetime(df['dateTimeFirstDeliveryMoment'])
+    df['startDateCase']               = pd.to_datetime(df['startDateCase'])
+    df['returnDateTime']              = pd.to_datetime(df['returnDateTime'])
+    df['registrationDateSeller']      = pd.to_datetime(df['registrationDateSeller'])
+
+    #Fixed Columns:
+    DATE = ['orderDate']
+    BASIC = ['totalPrice','quantityOrdered','fulfilmentByPlatform','countryCodeNL','countryOriginNL','countryOriginBE',
+            'countryOriginDE','productTitleLength','promisedDeliveryDays','partnerSellingDays', 'orderCorona']
+    WEEK = ['orderMonday','orderTuesday','orderWednesday','orderThursday','orderFriday','orderSaturday','orderSunday']
+    MONTH = ['orderJanuary','orderFebruary','orderMarch','orderApril','orderMay','orderJune',
+             'orderJuly','orderAugust','orderSeptember','orderOctober','orderNovember','orderDecember']
+    YEAR = ['orderYear2020']
+    GROUP = ['groupHealth','groupHome','groupSports','groupComputer','groupPets','groupToys','groupBooks', 
+             'groupBaby', 'groupMusic', 'groupFood','groupOffice','groupFashion','groupOther','groupCar']
+
+    #Dynamic Columns:
+    TRANSPORTERX = ['transporterPOSTNL/X','transporterDHL/X','transporterDPD/X','transporterBRIEF/X','transporterOTHER/X']
+    KNOWNX = ['caseKnownX','returnKnownX','cancellationKnownX','onTimeDeliveryKnownX','lateDeliveryKnownX']
+    PRODUCTX = ['productOrderCountX','productTotalCountX','productTotalReturnedX','productReturnFractionX']
+    SELLERX = ['sellerDailyOrdersX']
+    HISTORICX = []
+    historic_variable = ['transporterCode','sellerId','productGroup']
+    for x in range(len(historic_variable)):
+        HISTORICX = HISTORICX + [historic_variable[x]+'HistoricHappyX',historic_variable[x]+'HistoricUnhappyX',historic_variable[x]+'HistoricUnknownX']
+
+    #Determinants:
+    DETERMINANT = ['noReturn', 'noCase', 'noCancellation', 'onTimeDelivery']
+
+    #Classifications
+    CLASSIFICATION = ['generalMatchClassification','detailedMatchClassification','binaryMatchClassification','determinantClassification']
+
+    X_col = BASIC + WEEK + MONTH + YEAR + GROUP + TRANSPORTERX + KNOWNX + PRODUCTX + SELLERX + HISTORICX
+    Y_col = ['detailedMatchClassification']
+    
+    return df, X_col, Y_col, historic_variable, DATE
