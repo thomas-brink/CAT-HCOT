@@ -27,7 +27,9 @@ from keras.utils import np_utils
 import json
 from numpyencoder import NumpyEncoder
 
-import functions #MORE FILES TO IMPORT!!
+from dynamic_input_data import *
+from HCOT import *
+from CAT import *
 import importlib
 
 import warnings
