@@ -389,6 +389,7 @@ class HierarchicalClassifier:
 
 def initialiseData():
     
+    # Load in the cleaned and prepared data as obtained through the 'Data_Cleaning_Preparation' file
     df = pd.read_csv('/Users/thoma/Documents/seminar_data/cleaned_prepared_data.csv', low_memory = True)
     
     df['orderDate']                   = pd.to_datetime(df['orderDate'])
