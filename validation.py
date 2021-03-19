@@ -33,7 +33,10 @@ from keras.utils import np_utils
 import json
 from numpyencoder import NumpyEncoder
 
-import functions  #MORE TO BE IMPLEMENTED
+from dynamic_input_data import *  
+from HCOT import *
+from CAT import *
+from baseline import *
 import importlib
 
 import warnings
