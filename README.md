@@ -9,7 +9,7 @@ The steps for running our code are as follows.
 3. Run the functions in the 'validation' file to obtain the optimal classifiers belonging to CAT-HCOT and the flat CAT-HCOT baseline.
 4. Load in the function from the 'CAT' file to implement the certainty-based automated thresholds (CAT) algorithm.
 5. Load in the functions from the 'HCOT' file and run the 'dynamicHierarchicalClassifier' function (in our paper, we use START=0 and END=10 days) to run the classifier belonging to the CAT-HCOT framework.
-6. Compare the performance of CAT-HCOT with the two baseline approaches by running the functions included in the 'baseline' file (in our paper, we use START=0 and END=10 days). 
+6. Compare the performance of CAT-HCOT with the two baseline approaches by running the functions included in the 'baseline' file (in our paper, we use START=0 and END=11 days). 
 
 ## PaperCAT-HCOT.pdf
 
