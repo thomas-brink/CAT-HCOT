@@ -59,7 +59,8 @@ def HCOT_optimisation():
     Tree.add_node(['HAPPY','UNHAPPY'], 'KNOWN')
     Tree.add_node(['MILDLY UNHAPPY','MEDIUM UNHAPPY','HEAVILY UNHAPPY'], 'UNHAPPY')
 
-    combinations = [('LR','RF','RF'),('RF','LR','LR'),('LR','LR','LR'),('RF','RF','RF')]
+    combinations = [('LR','RF','RF'),('RF','LR','LR'),('LR','LR','LR'),('RF','RF','RF'),
+                    ('LR','LR','RF'),('LR','RF','LR'),('RF','RF','LR'),('RF','LR','RF')]
 
     output = {}
 
