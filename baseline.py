@@ -37,7 +37,7 @@ warnings.filterwarnings("ignore")
 
 def staticHierarchicalClassifier(START, END):
     '''
-    Static HCOT baseline (no blocking)
+    Static HCOT baseline (no blocking).
     '''
     
     Tree = ClassHierarchy('ORDERS')
