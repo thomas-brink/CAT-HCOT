@@ -1,11 +1,13 @@
 # Seminar-QM-BA
-Code for Seminar in QM &amp; BA
+Code for Seminar in QM &amp; BA.
 
-The files in this directory belong to the paper "A Certainty-Based Approach for Dynamic Hierarchical Classification of Product Order Satisfaction".
+The files in this repository belong to the paper "A Certainty-Based Approach for Dynamic Hierarchical Classification of Product Order Satisfaction". This paper models the classification of customer satisfaction belonging to product orders at an online retailer in the Netherlands using hierarchical classification over time with a certainty-based blocking approach. The main components of this paper are the Hierarchical Classification Over Time (HCOT) and Certainty-based Automated Thresholds (CAT) procedures. These two components are outlined in corresponding code files below. In addition, we provide code for data cleaning and preparation, dynamic data generation, training and validation, and baseline comparison.  
 
 ## PaperCAT-HCOT.pdf
 
-Research paper
+File with the respective research paper. 
+
+**Abstract**: Online retailers collaborate more and more with partners to sell products via their platform, making it increasingly important to preserve platform quality. In this paper, we predict the quality of matches between sellers and customers associated with product orders, where we face a trade-off between the accuracy and timeliness of our predictions. To deal with this trade-off, we introduce the Hierarchical Classification Over Time (HCOT) algorithm, which dynamically classifies product orders using top-down, non-mandatory leaf-node prediction. To enforce a blocking approach with respect to the tree-based class hierarchy, we introduce the Certainty-based Automated Thresholds (CAT) algorithm, which automatically computes optimal thresholds at each node in the hierarchy. The resulting CAT-HCOT algorithm has the ability to provide both accurate and timely predictions while specifically tailoring the hierarchical classification approach to the domain of customer satisfaction in online retailing. CAT-HCOT obtains a predictive accuracy of 94%. In terms of timeliness, CAT-HCOT classifies 40% of product orders on the order date itself, 80% of product orders within five days after the order date, and 100% of product orders after 10 days. In contrast, a static classification approach is unable to capture the accuracy vs. timeliness trade-off. Also, CAT-HCOT outperforms a flat, one-level hierarchy baseline method in terms of hierarchical precision and recall scores.
 
 ## Data_Cleaning_Preparation.ipynb
 
