@@ -60,6 +60,8 @@ def staticHierarchicalClassifier(START, END):
         statistics['recall_'+leaf]    = {}
         statistics['f1_'+leaf]        = {}
     
+    df, X_col, Y_col, historic_variable, DATE = initialiseData()
+    
     for DAYS in range(START, END+1):
 
         X, y = functions.dataX(df, DATE, X_col, Y_col, historic_variable, DAYS)
@@ -129,6 +131,8 @@ def dynamicFlatClassifier(START, END):
         statistics['2recall_'+leaf]    = {}
         statistics['2f1_'+leaf]        = {}
      
+    df, X_col, Y_col, historic_variable, DATE = initialiseData()
+    
     for DAYS in range(START, END+1):
 
         X, y = functions.dataX(df, DATE, X_col, Y_col, historic_variable, DAYS)
