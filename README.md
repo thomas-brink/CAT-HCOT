@@ -1,5 +1,5 @@
 # Seminar-QM-BA
-Code for Seminar in QM &amp; BA
+Code for Seminar in QM &amp; BA.
 
 The files in this repository belong to the paper "A Certainty-Based Approach for Dynamic Hierarchical Classification of Product Order Satisfaction". This paper models the classification of customer satisfaction belonging to product orders at an online retailer in the Netherlands using hierarchical classification over time with a certainty-based blocking approach. The main components of this paper are the Hierarchical Classification Over Time (HCOT) and Certainty-based Automated Thresholds (CAT) procedures. These two components are outlined in corresponding code files below. In addition, we provide code for data cleaning and preparation, dynamic data generation, training and validation, and baseline comparison.  
 
