@@ -4,7 +4,7 @@ from HCOT import *
 
 def opt_threshold(probs, node, day, certainty, option = 2, steps = 100):
     '''
-    CAT for CAT-HCOT
+    CAT algorithm for computing optimal thresholds in the CAT-HCOT algorithm. This function is used in dynamicHierarchicalClassifiers and returns node specific thresholds.
     '''
     
     if node == 1:
@@ -108,7 +108,7 @@ def opt_threshold(probs, node, day, certainty, option = 2, steps = 100):
 
 def flat_thresholds(probs, node, day, certainty, steps = 100):
     '''
-    CAT for flat CAT-HCOT
+    CAT for computing optimal thresholds for the flat CAT-HCOT (baseline). This function is used in dynamicFlatClassifier and return nodes specific thresholds
     '''
     
     NODES = set(['UNKNOWN', 'HAPPY', 'MILDLY UNHAPPY', 'MEDIUM UNHAPPY', 'HEAVILY UNHAPPY'])
