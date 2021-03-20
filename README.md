@@ -93,4 +93,4 @@ This file includes code that can be used as a replacement for the separate 'vali
 7. Base Case 1 (Static): run the code in this folder to perform testing following the static HCOT baseline.
 8. Base Case 2 (Flat): run the code in this folder to perform testing following the flat CAT-HCOT baseline.
 
-If there are any questions or comments, please ask them via this GitHub page.
+If any questions or comments occur, please ask them via this GitHub page.
