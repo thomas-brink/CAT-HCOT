@@ -430,8 +430,8 @@ def dataX(df, DATE, X_col, y_col, historic_variable, days):
 
 def initialiseData():
     
-    # Load in the cleaned and prepared data as obtained through the 'Data_Cleaning_Preparation' file
-    df = pd.read_csv('/Users/thoma/Documents/seminar_data/cleaned_prepared_data.csv', low_memory = True)
+    # Read in cleaned and prepared data file (.csv) that is created in the data_cleaning_preparation code
+    df = pd.read_csv('path...', low_memory = True)
     
     df['orderDate']                   = pd.to_datetime(df['orderDate'])
     df['cancellationDate']            = pd.to_datetime(df['cancellationDate'])
@@ -442,7 +442,7 @@ def initialiseData():
     df['returnDateTime']              = pd.to_datetime(df['returnDateTime'])
     df['registrationDateSeller']      = pd.to_datetime(df['registrationDateSeller'])
 
-    #Fixed Columns:
+    # Fixed Columns:
     DATE = ['orderDate']
     BASIC = ['totalPrice','quantityOrdered','fulfilmentByPlatform','countryCodeNL','countryOriginNL','countryOriginBE',
             'countryOriginDE','productTitleLength','promisedDeliveryDays','partnerSellingDays', 'orderCorona']
@@ -453,7 +453,7 @@ def initialiseData():
     GROUP = ['groupHealth','groupHome','groupSports','groupComputer','groupPets','groupToys','groupBooks', 
              'groupBaby', 'groupMusic', 'groupFood','groupOffice','groupFashion','groupOther','groupCar']
 
-    #Dynamic Columns:
+    # Dynamic Columns:
     TRANSPORTERX = ['transporterPOSTNL/X','transporterDHL/X','transporterDPD/X','transporterBRIEF/X','transporterOTHER/X']
     KNOWNX = ['caseKnownX','returnKnownX','cancellationKnownX','onTimeDeliveryKnownX','lateDeliveryKnownX']
     PRODUCTX = ['productOrderCountX','productTotalCountX','productTotalReturnedX','productReturnFractionX']
@@ -463,10 +463,10 @@ def initialiseData():
     for x in range(len(historic_variable)):
         HISTORICX = HISTORICX + [historic_variable[x]+'HistoricHappyX',historic_variable[x]+'HistoricUnhappyX',historic_variable[x]+'HistoricUnknownX']
 
-    #Determinants:
+    # Determinants:
     DETERMINANT = ['noReturn', 'noCase', 'noCancellation', 'onTimeDelivery']
 
-    #Classifications
+    # Classifications
     CLASSIFICATION = ['generalMatchClassification','detailedMatchClassification','binaryMatchClassification','determinantClassification']
 
     X_col = BASIC + WEEK + MONTH + YEAR + GROUP + TRANSPORTERX + KNOWNX + PRODUCTX + SELLERX + HISTORICX
