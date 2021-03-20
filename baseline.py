@@ -1,6 +1,3 @@
-
-#IMPORT: ClassHierarchy, HierarchicalClassifier, dataX, hierarchical performance measures, flat_thresholds
-
 import pandas as pd
 import numpy as np
 
@@ -37,7 +34,8 @@ warnings.filterwarnings("ignore")
 
 def staticHierarchicalClassifier(START, END):
     '''
-    Static HCOT baseline (no blocking).
+    Static HCOT baseline (no blocking), hence predicting all instances on a single point in time (each day mandatory leaf node prediction is used)
+    Optimal hyperparameters are already included. 
     '''
     
     Tree = ClassHierarchy('ORDERS')
@@ -102,7 +100,8 @@ def staticHierarchicalClassifier(START, END):
 
 def dynamicFlatClassifier(START, END):  
     '''
-    Flat CAT-HCOT baseline (one-level hierarchy)
+    Flat CAT-HCOT baseline (one-level hierarchy) which does make use of a similar blocking approach with CAT. Only the start and end period should be given as input. 
+    Optimal hyperparameters are already included. 
     '''
 
     hypers = pd.DataFrame({'LR_penalty'     : ['l1','l1','l1','l1','l1','l1','l2','l1','l1','l1','l1'],
@@ -229,7 +228,7 @@ def dynamicFlatClassifier(START, END):
             statistics['2f1_'+leaf][DAYS]        = f1_score_ancestors(Tree, y_test['detailedMatchClassification'].loc[leaf_ix], current_pred.loc[leaf_ix], beta = 1)
         
         file_name = 'flat_statistics_'+str(CERTAINTY)+'.json'
-        path_name = '/Users/LV/Desktop/' + file_name
+        path_name = 'path...' + file_name
         with open(path_name, 'w') as f:
             json.dump(statistics, f, cls = NumpyEncoder)
 
