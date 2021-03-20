@@ -80,7 +80,7 @@ This file includes the baseline methods: static HCOT and flat CAT-HCOT
 - staticHierarchicalClassifier(START, END): static HCOT (no blocking), hence predicting all instances on a single point in time
 - dynamicFlatClassifier(START, END): flat CAT-HCOT (one-level hierarchy), using similar blokking approach as in CAT-HCOT
 
-## seminar_hierarchical_classifiers.ipynb
+## Seminar_Hierarchical_Classifiers.ipynb
 
 This file includes code that can be used as a replacement for the separate 'validation', 'CAT', 'HCOT' and 'baseline' code files. Note that the functions contained in this file are the same ones that are included in the previously discussed separate files. Running all parts in this single file allows the user to perform validation and testing for both CAT-HCOT and the two baselines. To do so, the following steps should be followed.
 
