@@ -62,7 +62,7 @@ def staticHierarchicalClassifier(START, END):
     
     for DAYS in range(START, END+1):
 
-        X, y = functions.dataX(df, DATE, X_col, Y_col, historic_variable, DAYS)
+        X, y = dataX(df, DATE, X_col, Y_col, historic_variable, DAYS)
 
         X_train_preburn = X.iloc[:int(0.8*len(X))]
         y_train_preburn = y.iloc[:int(0.8*len(y))]
@@ -134,7 +134,7 @@ def dynamicFlatClassifier(START, END):
     
     for DAYS in range(START, END+1):
 
-        X, y = functions.dataX(df, DATE, X_col, Y_col, historic_variable, DAYS)
+        X, y = dataX(df, DATE, X_col, Y_col, historic_variable, DAYS)
 
         X_train_preburn = X.iloc[:int(0.8*len(X))]
         y_train_preburn = y.iloc[:int(0.8*len(y))]
@@ -228,7 +228,8 @@ def dynamicFlatClassifier(START, END):
             statistics['2f1_'+leaf][DAYS]        = f1_score_ancestors(Tree, y_test['detailedMatchClassification'].loc[leaf_ix], current_pred.loc[leaf_ix], beta = 1)
         
         file_name = 'flat_statistics_'+str(CERTAINTY)+'.json'
-        path_name = 'path...' + file_name
+        #path_name = 'path...' + file_name
+        path_name = '/Users/thoma/Documents/seminar_data/' + file_name
         with open(path_name, 'w') as f:
             json.dump(statistics, f, cls = NumpyEncoder)
 
