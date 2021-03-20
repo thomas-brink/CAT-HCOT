@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from HCOT import *
 
-def opt_threshold(probs, node, day, certainty, option = 2, steps = 100):
+def opt_threshold(probs, node, day, certainty, steps = 100):
     '''
     CAT algorithm for computing optimal thresholds in the CAT-HCOT algorithm. This function is used in dynamicHierarchicalClassifiers and returns node specific thresholds.
     '''
@@ -62,16 +62,8 @@ def opt_threshold(probs, node, day, certainty, option = 2, steps = 100):
     y_pos = probs[probs.detailedMatchClassification.isin(y_pos_filter_list)][probabilities_for] 
     y_neg = probs[probs.detailedMatchClassification.isin(y_neg_filter_list)][probabilities_for]
     
-    if option == 1:
-        y_pos = y_pos[y_pos > min(majority_vote)]
-        y_neg = y_neg[y_neg > min(majority_vote)]
-    elif option == 2:
-        y_pos = y_pos[y_pos.index.isin(majority_vote.index)]
-        y_neg = y_neg[y_neg.index.isin(majority_vote.index)]
-    else:
-        raise Exception('''Error: undefined threshold option has been passed. Threshold options (integer input):
-                           1: Consider all probabilities >= min(majority vote)
-                           2: Only consider probabilities that are the majority vote''')
+    y_pos = y_pos[y_pos.index.isin(majority_vote.index)]
+    y_neg = y_neg[y_neg.index.isin(majority_vote.index)]
     
     # Potential thresholds
     V = np.concatenate((y_pos, y_neg))
@@ -136,15 +128,17 @@ def flat_thresholds(probs, node, day, certainty, steps = 100):
     
     y_pos = y_pos[y_pos.index.isin(majority_vote.index)]
     y_neg = y_neg[y_neg.index.isin(majority_vote.index)]
+
+    V = np.concatenate((y_pos, y_neg))
+    V = np.unique(V) # np.unique() also sorts    
  
     if len(y_neg) > 0:
         lowerbound = np.percentile(y_neg, (certainty*100))
     else:
         lowerbound = V.min()
 
-    V = np.concatenate((y_pos, y_neg))
-    V = np.unique(V) # np.unique() also sorts    
     V = V[V >= lowerbound] #define allowed search space
+
     S = np.linspace(V.min(), V.max(), steps)
     
     thresholds = pd.DataFrame({'threshold'     : [0]*steps,
