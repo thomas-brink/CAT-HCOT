@@ -35,7 +35,7 @@ This file includes functions which are used to create the input data (belonging 
 
 ## 3. Seminar_Hierarchical_Classifiers.ipynb
 
-This file includes code that can be used as a replacement for the separate 'validation', 'CAT', 'HCOT' and 'baseline' code files. Note that the functions contained in this file are the same ones that are included in the previously discussed separate files. Running all parts in this single file allows the user to perform validation and testing for both CAT-HCOT and the two baselines. To do so, the following steps should be followed.
+This file includes the main code that we use to define CAT and HCOT, perform validation to obtain optimal hierarchies, implement CAT-HCOT, and apply the two baseline methods. Thus, running all parts in this single file allows the user to perform validation and testing for both CAT-HCOT and the two baselines. To do so, the following steps should be followed.
 
 1. Import packages: import the necessary packages.
 2. Load Data: load the data as created in the 'data_cleaning_preparation' code by running the initialiseData() function
@@ -46,7 +46,7 @@ This file includes code that can be used as a replacement for the separate 'vali
 7. Base Case 1 (Static): run the code in this folder to perform testing following the static HCOT baseline.
 8. Base Case 2 (Flat): run the code in this folder to perform testing following the flat CAT-HCOT baseline.
 
-Note that the functions relevant in this file can be divided into different groups, which are specifically presented in the 'functions' folder. These functions are all included in the 'Seminar_Hierarchical_Classifiers' file, so they are not used separately. The division we provide is purely for understanding purposes.
+Note that the functions relevant in this file can be divided into different groups, which are specifically presented in the 'functions' folder. These functions are all included in the 'Seminar_Hierarchical_Classifiers' file, so that they do not contain extra/new information. The division we provide is purely for understanding purposes. To provide a little bit more explanation on these separate functions, we dive into this division below.
 
 ### validation.py
 
@@ -64,14 +64,14 @@ This file includes the code for applying the validation procedure that we use fo
 ### CAT.py
 
 This file includes the CAT algorithm that we apply to CAT-HCOT and the flat CAT-HCOT baseline. Note that a single run of the CAT algorithm computes a node- and day-specific threshold. Implementing CAT in our framework thus requires multiple runs of the CAT algorithm (for each node on each day with NMLNP). The code file consists of two main functions: 
-- opt_threshold(probs, node, day, certainty, option = 2, steps = 100): CAT for HCOT, using the hierarchy from our report.
-- flat_thresholds(probs, node, day, certainty, steps = 100): CAT for flat HCOT, using the flat hierarchy from our report.
+- opt_threshold(probs, node, day, certainty, option = 2, steps = 100): CAT for HCOT, using the hierarchy from the research paper.
+- flat_thresholds(probs, node, day, certainty, steps = 100): CAT for flat CAT-HCOT, using the flat hierarchy from the research paper.
 
 ### HCOT.py
 
-This file includes the HCOT algoritm together with functions to test and evaluate the performance of this algorithm. The code in this file applies thresholds obtained via the CAT algorithm and works with the three-level tree-based class hierarchy for product orders as defined in the research paper and as optimised in the 'validation' code. Therefore, when running this code, we apply CAT-HCOT as defined in the research paper. The code in this file consists of the following functions: 
+This file includes the HCOT algoritm together with functions to test and evaluate the performance of this algorithm. The code in this file applies thresholds obtained via the CAT algorithm and works with the three-level tree-based class hierarchy for product orders as defined in the research paper and as optimised in the validation phase. Therefore, when implementing this code, we apply CAT-HCOT as defined in the research paper. The code in this file consists of the following functions: 
 - ClassHierarchy(root): Class with all functions to construct a hierarchy which is thereafter used for HierarchicalClassifier, main function:
-  - add_node(children, parent): function to construct the hiearchy. By calling this function you can create a children-parent relationship in the tree.
+  - add_node(children, parent): function to construct the hiearchy. By calling this function, you can create a children-parent relationship in the tree.
 - HierarchicalClassifier(class_hierarchy): Class with all functions to train and test a hierarchical classifier, the main functions are:
   - fit_classifiers(classifiers): function to fit the classifier per parent node, the input is a dictionary with the parent nodes as keys and values the classifiers.
   - fit(X, y): Train the hierarchy with X and Y. The classifiers at each parent node are trained with the acutal training labels.
@@ -92,5 +92,6 @@ This file includes code for the two baseline methods: static HCOT and flat CAT-H
 - staticHierarchicalClassifier(START, END): static HCOT (no blocking), hence predicting all instances on a single point in time.
 - dynamicFlatClassifier(START, END): flat CAT-HCOT (one-level hierarchy), using similar blokking approach as in CAT-HCOT.
 
+Again, note that all functions from the 'validation.py', 'CAT.py', 'HCOT.py', and 'baseline.py' files are directly included in the 'Seminar_Hierarchical_Classifiers.ipynb' file, such that simply running the latter file allows us to perform all required validation and testing processes.
 
 If any questions or comments occur, please ask them via this GitHub page.
