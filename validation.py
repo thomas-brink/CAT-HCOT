@@ -64,7 +64,7 @@ def HCOT_optimisation():
 
     for DAY in range(0,11):
         
-        X_preBurn, y_preBurn = functions.dataX(df_, DATE, X_col, Y_col, historic_variable, DAY)
+        X_preBurn, y_preBurn = dataX(df_, DATE, X_col, Y_col, historic_variable, DAY)
         index = range(0, X_preBurn.shape[0])
 
         X_train_val = X_preBurn.iloc[int(0.1*len(X_preBurn)):]
@@ -84,7 +84,8 @@ def HCOT_optimisation():
 
             output[DAY][str(combination)] = (DAY, best_param, f1, accuracy)
 
-            with open('/path.../validation.json', 'w') as f:
+            #with open('/path.../validation.json', 'w') as f:
+            with open('/Users/thoma/Documents/seminar_data/validation.json', 'w') as f:
                 json.dump(output, f, cls = NumpyEncoder)
 
     return output
@@ -185,7 +186,7 @@ def flat_HCOT_optimisation():
 
     for DAY in range(0,11):
         
-        X_preBurn, y_preBurn = functions.dataX(df_, DATE, X_col, Y_col, historic_variable, DAY)
+        X_preBurn, y_preBurn = dataX(df_, DATE, X_col, Y_col, historic_variable, DAY)
         index = range(0, X_preBurn.shape[0])
 
         X_train_val = X_preBurn.iloc[int(0.1*len(X_preBurn)):]
@@ -211,7 +212,8 @@ def flat_HCOT_optimisation():
             output[DAY][str(combination)] = (DAY, best_param, f1, accuracy)
             print(output)
 
-            with open('path.../validation.json', 'w') as f:
+            #with open('path.../validation.json', 'w') as f:
+            with open('/Users/thoma/Documents/seminar_data/validation.json', 'w') as f:
                 json.dump(output, f, cls = NumpyEncoder)
 
     return output
