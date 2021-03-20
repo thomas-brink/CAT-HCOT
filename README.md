@@ -93,4 +93,4 @@ This file includes code for the two baseline methods: static HCOT and flat CAT-H
 
 Again, note that all functions from the 'validation.py', 'CAT.py', 'HCOT.py', and 'baseline.py' files are directly included in the 'Seminar_Hierarchical_Classifiers.ipynb' file, such that simply running the latter file allows us to perform all required validation and testing processes.
 
-If any questions or comments occur, please ask them via this GitHub page.
+If any questions or comments occur, please ask them via this GitHub page (https://github.com/thomas-brink/Seminar-QM-BA).
