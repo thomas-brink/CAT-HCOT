@@ -46,7 +46,7 @@ def HCOT_optimisation():
     Optimisation of a single hierarchy with a pre-defined set of possible combinations to try. Output is a dictionary with f1 scores and optimal hyperparemtes for each combination.
     '''
 
-    df, X_col, Y_col, historic_variable, DATE = initialiseData():
+    df, X_col, Y_col, historic_variable, DATE = initialiseData()
 
     # df_ contains a sample of training + validation data
     random.seed(100)
@@ -88,6 +88,8 @@ def HCOT_optimisation():
             with open('/Users/thoma/Documents/seminar_data/validation.json', 'w') as f:
                 json.dump(output, f, cls = NumpyEncoder)
 
+    print(DAY)            
+    
     return output
 
 def get_hyperspace(combination):
@@ -178,7 +180,7 @@ def flat_HCOT_optimisation():
 
     combinations = ['RF','LR']
 
-    df, X_col, Y_col, historic_variable, DATE = initialiseData():
+    df, X_col, Y_col, historic_variable, DATE = initialiseData()
 
     # df_ contains a sample of training + validation data
     random.seed(100)
