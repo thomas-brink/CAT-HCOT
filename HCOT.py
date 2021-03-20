@@ -453,7 +453,7 @@ def dynamicHierarchicalClassifier(START, END):
     
     for DAYS in range(START, END+1):
 
-        X, y = functions.dataX(df, DATE, X_col, Y_col, historic_variable, DAYS)
+        X, y = dataX(df, DATE, X_col, Y_col, historic_variable, DAYS)
 
         X_train_preburn = X.iloc[:int(0.8*len(X))]
         y_train_preburn = y.iloc[:int(0.8*len(y))]
@@ -513,7 +513,8 @@ def dynamicHierarchicalClassifier(START, END):
                                                                                previous_pred_block, THRESHOLDS, OPTION, CERTAINTY, y_test, Tree, HC, feature_importances, statistics)
         
         file_name = 'statistics_optimal_'+str(CERTAINTY)+'.json'
-        path_name = 'path...' + file_name
+        #path_name = 'path...' + file_name
+        path_name = '/Users/thoma/Documents/seminar_data/' + file_name
         with open(path_name, 'w') as f:
             json.dump(statistics, f, cls = NumpyEncoder)
 
