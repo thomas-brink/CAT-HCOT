@@ -59,11 +59,11 @@ This file includes the CAT algorithm that we apply to CAT-HCOT and the flat CAT-
 
 This file includes the HCOT algoritm together with functions to test and evaluate the performance of this algorithm. The code in this file applies thresholds obtained via the CAT algorithm and works with the three-level tree-based class hierarchy for product orders as defined in the research paper and as optimised in the 'validation' code. Therefore, when running this code, we apply CAT-HCOT as defined in the research paper. The code in this file consists of the following functions: 
 - ClassHierarchy(root): Class with all functions to construct a hierarchy which is thereafter used for HierarchicalClassifier, main function:
-  - add_node(children, parent): add a node with corresponding childnodes to the hierachy
+  - add_node(children, parent): function to construct the hiearchy. By calling this function you can create a children-parent relationship in the tree.
 - HierarchicalClassifier(class_hierarchy): Class with all functions to train and test a hierarchical classifier, the main functions are:
   - fit_classifiers(classifiers): function to fit the classifier per parent node, the input is a dictionary with the parent nodes as keys and values the classifiers.
-  - fit(X, y): train the hierarchy with X and Y.
-  - predict(X): predict the values of X with the fitted hierarchy.
+  - fit(X, y): Train the hierarchy with X and Y. The classifiers at each parent node are trained with the acutal training labels.
+  - predict(X): predict the values of X with the fitted hierarchy. The test instances go through the hierarchy in a top-down fashion with mandatory-leaf-node prediction
   - predict_proba(X, threshold): predict the values of X by making use of a pre-defined threshold for each node, if threshold not reached then blocked.
   - predict_proba2(X, THRESHOLDS): predict the values of X by making use of node-specific thresholds (THRESHOLDS), if threshold not reached then blocked.
   - get_probabilities(X, y): get the class probabilities for each instance, this is used for training the thresholds with CAT.
