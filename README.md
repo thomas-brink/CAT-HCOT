@@ -40,45 +40,45 @@ This file includes functions which are used to create the input data (belonging 
 
 This file includes the code for applying the validation procedure that we use for CAT-HCOT and the two baseline approaches. Note that the validation procedure for CAT-HCOT is the same as that for the static baseline, since our hierarchies are optimised on a daily basis. The validation procedure evaluates all possible classifier combinations at parent nodes in the respective daily hierarchy, optimises the hyperparameters belonging to each combination, and outputs the respective performance. From the results, the best classifier combinations (per day) and their respective hyperparameters are obtained. These can subsequently be used for testing purposes. The validation code consists of the following functions:
 - HCOT_optimisation(): optimisation of a single hierarchy with pre-defined set of possible combination which includes the functions:
-  - get_hyperspace(combination): create hyperspace for optimisation (currently supports DT, RF, NN and LR)
-  - clf_hypers(params): function which distributes the hyperparameters over the 3 specific parent nodes in the hierarchy
-  - objective_function(params): objective for optimising daily hierarchical classifier combination in HCOT
-  - hyperopt(param_space, X_train, y_train, X_val, y_val, num_eval): actual optimisation function for a single hierarchy with pre-set classifier combination
+  - get_hyperspace(combination): create hyperspace for optimisation (currently supports DT, RF, NN and LR).
+  - clf_hypers(params): function which distributes the hyperparameters over the 3 specific parent nodes in the hierarchy.
+  - objective_function(params): objective for optimising daily hierarchical classifier combination in HCOT.
+  - hyperopt(param_space, X_train, y_train, X_val, y_val, num_eval): actual optimisation function for a single hierarchy with pre-set classifier combination.
 - flat_HCOT_optimisation(): optimisation of single 'one-level hierarchy' of the flat HCOT basline which includes similar functions (supporting LR + RF):
-  - flat_get_hyperspace(combination): create hyperspace for optimisation 
-  - flat_objective_function(params): objective for optimising either LR or RF
-  - flat_hyperopt(param_space, X_train, y_train, X_val, y_val, num_eval): actual optimisation function
+  - flat_get_hyperspace(combination): create hyperspace for optimisation.
+  - flat_objective_function(params): objective for optimising either LR or RF.
+  - flat_hyperopt(param_space, X_train, y_train, X_val, y_val, num_eval): actual optimisation function.
 
 ## CAT.py
 
 This file includes the CAT algorithm that we apply to CAT-HCOT and the flat CAT-HCOT baseline. Note that a single run of the CAT algorithm computes a node- and day-specific threshold. Implementing CAT in our framework thus requires multiple runs of the CAT algorithm (for each node on each day with NMLNP). The code file consists of two main functions: 
-- opt_threshold(probs, node, day, certainty, option = 2, steps = 100): CAT for HCOT, using the hierarchy from our report
-- flat_thresholds(probs, node, day, certainty, steps = 100): CAT for flat HCOT, using the flat hierarchy from our report
+- opt_threshold(probs, node, day, certainty, option = 2, steps = 100): CAT for HCOT, using the hierarchy from our report.
+- flat_thresholds(probs, node, day, certainty, steps = 100): CAT for flat HCOT, using the flat hierarchy from our report.
 
 ## HCOT.py
 
-This file includes the complete HCOT algoritm together with function to test and evaluate the performance.
+This file includes the HCOT algoritm together with functions to test and evaluate the performance of this algorithm. The code in this file applies thresholds obtained via the CAT algorithm and works with the three-level tree-based class hierarchy for product orders as defined in the research paper and as optimised in the 'validation' code. Therefore, when running this code, we apply CAT-HCOT as defined in the research paper. The code in this file consists of the following functions: 
 - ClassHierarchy(root): Class with all functions to construct a hierarchy which is thereafter used for HierarchicalClassifier, main function:
   - add_node(children, parent): add a node with corresponding childnodes to the hierachy
 - HierarchicalClassifier(class_hierarchy): Class with all functions to train and test a hierarchical classifier, the main functions are:
-  - fit_classifiers(classifiers): function to fit the classifier per parent node, the input is a dictionary with the parent nodes as keys and values the classifiers
-  - fit(X, y): train the hierarchy with X and Y
-  - predict(X): predict the values of X with the fitted hierarchy
-  - predict_proba(X, threshold): predict the values of X by making use of a pre-defined threshold for each node, if threshold not reached then blocked
-  - predict_proba2(X, THRESHOLDS): predict the values of X by making use of node-specific thresholds (THRESHOLDS), if threshold not reached then blocked
-  - get_probabilities(X, y): get the class probabilities for each instance, this is used for training the thresholds with CAT
-- initialiseData(): function to load data and retrieve features for prediction (included in dynamicHierarchicalClassifier)
-- dynamicHierarchicalClassifier(START, END): CAT-HCOT algorithm to test instances over a period from START till END
-- get_performance(...): function included in dynamicHierarchicalClassifier to compute daily/global performance measures while running HCOT
-- precision_score_ancestors(class_hierarchy, y_true, y_pred): hierarchical precision score, input is the class_hierarchy from ClassHierarchy
-- recall_score_ancestors(class_hierarchy, y_true, y_pred): hierarchical recall score, input is the class_hierarchy from ClassHierarchy
-- f1_score_ancestors(class_hierarchy, y_true, y_pred, beta): hierarchical f1 score, input is the class_hierarchy from ClassHierarchy
+  - fit_classifiers(classifiers): function to fit the classifier per parent node, the input is a dictionary with the parent nodes as keys and values the classifiers.
+  - fit(X, y): train the hierarchy with X and Y.
+  - predict(X): predict the values of X with the fitted hierarchy.
+  - predict_proba(X, threshold): predict the values of X by making use of a pre-defined threshold for each node, if threshold not reached then blocked.
+  - predict_proba2(X, THRESHOLDS): predict the values of X by making use of node-specific thresholds (THRESHOLDS), if threshold not reached then blocked.
+  - get_probabilities(X, y): get the class probabilities for each instance, this is used for training the thresholds with CAT.
+- initialiseData(): function to load data and retrieve features for prediction (included in dynamicHierarchicalClassifier).
+- dynamicHierarchicalClassifier(START, END): CAT-HCOT algorithm to test instances over a period from START till END.
+- get_performance(...): function included in dynamicHierarchicalClassifier to compute daily/global performance measures while running HCOT.
+- precision_score_ancestors(class_hierarchy, y_true, y_pred): hierarchical precision score, input is the class_hierarchy from ClassHierarchy.
+- recall_score_ancestors(class_hierarchy, y_true, y_pred): hierarchical recall score, input is the class_hierarchy from ClassHierarchy.
+- f1_score_ancestors(class_hierarchy, y_true, y_pred, beta): hierarchical f1 score, input is the class_hierarchy from ClassHierarchy.
 
 ## baseline.py
 
-This file includes the baseline methods: static HCOT and flat CAT-HCOT
-- staticHierarchicalClassifier(START, END): static HCOT (no blocking), hence predicting all instances on a single point in time
-- dynamicFlatClassifier(START, END): flat CAT-HCOT (one-level hierarchy), using similar blokking approach as in CAT-HCOT
+This file includes code for the two baseline methods: static HCOT and flat CAT-HCOT. For the static baseline, we predict all test instances on a daily basis, whereas the flat baseline performs CAT-HCOT in a flat (one-level) hierarchy. The static baseline applies the optimal hierarchies obtained via the validation procedure for CAT-HCOT, while the flat baseline uses the optimised hierarchies from the flat validation procedure (both are defined in 'validation.py'). The code in this file consists of two functions:
+- staticHierarchicalClassifier(START, END): static HCOT (no blocking), hence predicting all instances on a single point in time.
+- dynamicFlatClassifier(START, END): flat CAT-HCOT (one-level hierarchy), using similar blokking approach as in CAT-HCOT.
 
 ## Seminar_Hierarchical_Classifiers.ipynb
 
@@ -92,3 +92,5 @@ This file includes code that can be used as a replacement for the separate 'vali
 6. CAT-HCOT: run the code in this folder to perform testing following CAT-HCOT.
 7. Base Case 1 (Static): run the code in this folder to perform testing following the static HCOT baseline.
 8. Base Case 2 (Flat): run the code in this folder to perform testing following the flat CAT-HCOT baseline.
+
+If there are any questions or comments, please ask them via this GitHub page.
