@@ -1,5 +1,3 @@
-#IMPORT FUCNTIONS functions.dataX, CAT.opt_threshold
-
 import pandas as pd
 import numpy as np
 
@@ -43,16 +41,26 @@ import random
 warnings.filterwarnings("ignore")
 
 class ClassHierarchy:
+    '''
+    Class with all functions to construct a hierarchy which is thereafter used for HierarchicalClassifier, main function: add_node.
+    As input the root node of the hierarchy should be given as a string.
+    '''
     
     def __init__(self, root):
+        # initialization function of the class
         self.root = root
         self.nodes = {}
         
     def add_node(self, children, parent):
+        '''
+        Function to construct the hiearchy. By calling this function you can create 1 children-parent relationship in the tree.
+        Input are strings, where children can be a list of strings.
+        '''
         for child in children:
             self.nodes[child] = parent
             
     def _get_leaf_nodes(self):
+        # get leaf nodes of the tree
         leaf_nodes = []
         for child in self.nodes.keys():
             if self._get_children(child) == []:
@@ -60,6 +68,7 @@ class ClassHierarchy:
         return leaf_nodes
     
     def _get_internal_nodes(self):
+        # get internal nodes of the tree, without the root node
         internal_nodes = []
         leaves = self._get_leaf_nodes()
         for child in self.nodes.keys():
@@ -68,14 +77,16 @@ class ClassHierarchy:
         return internal_nodes
 
     def _get_children(self, parent):
+        # get the children of the requested parent
         return sorted([child for child, childs_parent in
                        self.nodes.items() if childs_parent == parent])
     
     def _get_parent(self, child):
+        # get the parent of the requested child
         return self.nodes[child] if (child in self.nodes and child != self.root) else self.root
     
     def _get_ancestors(self, child):
-        # Not including root, not including the child
+        # get ancestors of requested child. Not including root, not including the child
         ancestors = []
         while True:
             child = self._get_parent(child)
@@ -92,12 +103,13 @@ class ClassHierarchy:
         return descendants
     
     def _depth_first(self, parent, classes):
+        # internal function to retreive descendants
         classes.append(parent)
         for node in self._get_children(parent):
             self._depth_first(node, classes)
             
     def _tree_distance(self, y_test, pred):
-        
+        # get the path-distance from y_test until pred (can be used as performance measure)
         y_test_path = [y_test] + self._get_ancestors(y_test) + [self.root] if y_test != self.root else [y_test] + self._get_ancestors(y_test)
         pred_path   = [pred] + self._get_ancestors(pred) + [self.root] if pred != self.root else [pred] + self._get_ancestors(pred)
         
@@ -119,16 +131,25 @@ class ClassHierarchy:
 
 class HierarchicalClassifier:
     '''
-    This class contains all functions to train and test a hierarchical classifier
+    Class with all functions to train and test a hierarchical classifier. 
+    The input should be an object of the class ClassHierarchy (constructed hierarchy)
+
+    Most important functions:
+    - fit(X,y)
+    - predict(X)
+    - predict_proba(X, threshold)
+    - predict_proba2(X, THREHSOLDS)
+    - get_probabilities(X, y)
     '''
 
     def __init__(self, class_hierarchy):
+        # initilisation function of the class
         self.stages = {}
         self.class_hierarchy = class_hierarchy
         self._create_stages(self.stages, self.class_hierarchy.root, 0)
 
     def _create_stages(self, stages, parent, depth):
-        # Get the children of this parent
+        # part of the initialisation, which creates a dictionary with all stages, each stage corresponds to a classifier that has to be trained with corresponding information
         children = self.class_hierarchy._get_children(parent)
         
         if len(children) > 0:
@@ -143,13 +164,13 @@ class HierarchicalClassifier:
                 self._create_stages(stages, node, depth + 1)
                 
     def _recode_label(self, classes, label):
-
+        # internal function to recode labels based on the class hierarchy structure (eg. Mildly Unhappy at the first split gets assigned the class Known)
         while label != self.class_hierarchy.root and label not in classes:
             label = self.class_hierarchy._get_parent(label)
         return label
                 
     def _prep_data(self, X, y):
-        
+        # internal function to prepare the data for each stage (e.g., recode labels)
         Xcols = range(0, X.shape[1])
         Ycol = X.shape[1]
         
@@ -162,6 +183,7 @@ class HierarchicalClassifier:
         return df, Xcols
     
     def _label_mapping(self, y_train, stage_name):
+        # internal function to create a mapping of the classes into integers
         labels = np.unique(y_train)
         int_label_mapping = dict(enumerate(labels))
         label_int_mapping = {y:x for x,y in int_label_mapping.items()}
@@ -169,13 +191,15 @@ class HierarchicalClassifier:
                                               'label_int':label_int_mapping}
         
     def _class_weights(self, y_train, stage_name):
+        # internal function which computes the class weights based on the training set at particular stage
         class_weights = class_weight.compute_class_weight('balanced',classes = np.unique(y_train),y = y_train)
         class_weights = dict(enumerate(class_weights))
         self.stages[stage_name]['classifier'].set_params(class_weight = class_weights)
     
     def fit_classifiers(self, classifiers):
         """
-        Fit a classifier to each stage
+        Fit a classifier to each stage (parent node), this is the first step in training the hierarchy
+        The input is a dictionary with the parent nodes as keys and classifiers as values.
         """
         if classifiers.keys() != self.stages.keys():
              raise ValueError('Your assigned classifiers do not match the stages of the hierarchy, fit a classifier to each of: '+self.stages.keys())
@@ -185,7 +209,8 @@ class HierarchicalClassifier:
     
     def fit(self, X, y):
         """
-        Build a multi-classifier from training data (X, y).
+        Train the constructed hierarchy with training data X and y. Note, first the fit_classifiers function has to be called in order to run this function.
+        The classifiers at each parent node are trained with the acutal training labels (gold data)
         """
         df, Xcols = self._prep_data(X, y)
         self.scaler = preprocessing.MinMaxScaler().fit(X)
@@ -197,7 +222,6 @@ class HierarchicalClassifier:
             X_train = dfFilter[Xcols]
             y_train = dfFilter[[stage_info['target']]]
                         
-            #warning - no samples to fit for stage
             if isinstance(stage_info['classifier'], KerasClassifier):
                 y_train_col = pd.Series(np.ravel(y_train))
                 
@@ -216,12 +240,14 @@ class HierarchicalClassifier:
                 stage_info['classifier'].fit(X_scaled, y_train_NN)
             else:
                 stage_info['classifier'] = stage_info['classifier'].fit(X_train, y_train)
-            #print('Stage '+stage_name+' succesfully fitted')
 
         return self
     
     def predict(self, X):
-        
+        '''
+        Predict the labels of X. The test instances go through the hierarchy in a top-down fashion with mandatory-leaf-node prediction
+        The predicted values are returned
+        '''
         stage_number = 0
         for stage_name, stage_info in self.stages.items():
             
@@ -233,7 +259,7 @@ class HierarchicalClassifier:
                 y_hat[stage_name] = y_hat[list(self.stages.keys())[stage_number - 1]]
             stage_number += 1             
                 
-            X_test = X[y_hat[stage_name].isin([stage_name])]  #warning - no samples to fit for stage
+            X_test = X[y_hat[stage_name].isin([stage_name])] 
             
             if X_test.empty:
                 continue
@@ -249,13 +275,16 @@ class HierarchicalClassifier:
                 y_hat_stage = pd.DataFrame(stage_info['classifier'].predict(X_test), index = X_test.index)
                 
             y_hat = y_hat.assign(stage_col = y_hat_stage)
-            y_hat.stage_col = y_hat.stage_col.fillna(y_hat[stage_name]) #fill previously predicted labels
+            y_hat.stage_col = y_hat.stage_col.fillna(y_hat[stage_name])
             y_hat = y_hat.drop(stage_name, axis=1)
             y_hat = y_hat.rename(columns={'stage_col': stage_name})
             
         return y_hat.iloc[:, y_hat.shape[1] - 1]     
     
     def predict_proba(self, X, threshold = 0.5):
+        '''
+        Predict the labels of X using probabilities with a predifined threshold. If the class probabilities do not exceed the threshold the instances are blocked at an internal node. 
+        '''
         
         self.blocking = {}
         stage_number = 0
@@ -269,7 +298,7 @@ class HierarchicalClassifier:
                 y_hat[stage_name] = y_hat[list(self.stages.keys())[stage_number - 1]]
             stage_number += 1             
                 
-            X_test = X[y_hat[stage_name].isin([stage_name])]  #warning - no samples to fit for stage
+            X_test = X[y_hat[stage_name].isin([stage_name])]  
             
             if isinstance(stage_info['classifier'], KerasClassifier):
                 X_scaled = pd.DataFrame(self.scaler.transform(X_test))
@@ -300,6 +329,10 @@ class HierarchicalClassifier:
         return y_hat.iloc[:, y_hat.shape[1] - 1]
     
     def predict_proba2(self, X, THRESHOLDS):
+        '''
+        Predict the values of X using class probabilities with a node-specific threshold. THRESHOLDS should be a dictionary with the node-names as keys and thresholds as values. 
+        If a class probability does not exceed the treshold the instance is blocked at the corresponding node. This is the function used for CAT-HCOT, where THRESHOLDS are computed with CAT
+        '''
         
         self.blocking = {}
         self.Tblocking = {}
@@ -314,7 +347,7 @@ class HierarchicalClassifier:
                 y_hat[stage_name] = y_hat[list(self.stages.keys())[stage_number - 1]]
             stage_number += 1             
                 
-            X_test = X[y_hat[stage_name].isin([stage_name])]  #warning - no samples to fit for stage
+            X_test = X[y_hat[stage_name].isin([stage_name])]  
             
             if X_test.empty:
                 self.blocking[stage_name] = None
@@ -356,6 +389,11 @@ class HierarchicalClassifier:
         return y_hat.iloc[:, y_hat.shape[1] - 1]
     
     def get_probabilities(self, X, y):
+        '''
+        Get the class probabilities for each instance in X, this is used for training the thresholds with CAT. The class probabilites are computed using the true training labels.
+        A dataframe is returned with all nodes as columns and all instances as rows. The values in this dataframe are the class probabilites for a particual instance going to a 
+        particular node.
+        '''
         
         df, Xcols = self._prep_data(X, y)
         
@@ -389,7 +427,11 @@ class HierarchicalClassifier:
 
 def dynamicHierarchicalClassifier(START, END):  
     '''
-    CAT-HCOT algorithm
+    CAT-HCOT algorithm to test instances over a period from START till END. (we use START = 0 and END = 10). If instances are blocked at an internal node the instances is classified again the next day. 
+    At day END, the blocking approach is removed such that all instances get classified.
+    Each day thresholds are trained with the CAT algorithm. Within this function it is possible to adjust the certainty parameter, hierarchy, classifiers and number of days for prediction. 
+    Optimal hyperparameters are already included. 
+    The final predictions, statistics and feature importances are returned. 
     '''
   
     Tree = ClassHierarchy('ORDERS')
@@ -471,7 +513,7 @@ def dynamicHierarchicalClassifier(START, END):
                                                                                previous_pred_block, THRESHOLDS, OPTION, CERTAINTY, y_test, Tree, HC, feature_importances, statistics)
         
         file_name = 'statistics_optimal_'+str(CERTAINTY)+'.json'
-        path_name = '/Users/LV/Desktop/' + file_name
+        path_name = 'path...' + file_name
         with open(path_name, 'w') as f:
             json.dump(statistics, f, cls = NumpyEncoder)
 
@@ -482,7 +524,10 @@ def dynamicHierarchicalClassifier(START, END):
     return final_pred, statistics, feature_importances
 
 def get_performance(DAYS, END, pred, current_pred, index_leaf, index_no_leaf, previous_pred_block, THRESHOLDS, OPTION, CERTAINTY, y_test, Tree, HC, feature_importances, statistics):
-    
+    '''
+    Function which is used in dynamicHierarchicalClassifier to compute daily/global performance measures while running HCOT.
+    '''
+
     #Initialize Dictionary at Day 0
     
     if DAYS == 0:
@@ -522,7 +567,7 @@ def get_performance(DAYS, END, pred, current_pred, index_leaf, index_no_leaf, pr
         block['Nchange'] = block.apply(lambda row: 0 if row[1] in Tree._get_descendants(row[0])+[row[0]] else 1, axis = 1)
         block['Pchange'] = block.apply(lambda row: 1 if row[1] in Tree._get_descendants(row[0]) else 0, axis = 1)
     previous_pred_block = pred.loc[index_block]
-    previous_index_block = index_block #was commented?
+    previous_index_block = index_block 
 
     y_test = y_test['detailedMatchClassification']
     test_pred = pd.concat([y_test.loc[index_leaf], current_pred[index_leaf]], axis=1, keys = [0,1])
@@ -572,6 +617,7 @@ def get_performance(DAYS, END, pred, current_pred, index_leaf, index_no_leaf, pr
     return statistics, feature_importances, previous_pred_block
 
 def _aggregate_class_sets(set_function, y_true, y_pred):
+    # internal function to calculate hierarchical performance measures
     intersection_sum = 0
     true_sum = 0
     predicted_sum = 0
@@ -584,6 +630,7 @@ def _aggregate_class_sets(set_function, y_true, y_pred):
     return (true_sum, predicted_sum, intersection_sum)
 
 def precision_score_ancestors(class_hierarchy, y_true, y_pred):
+    # hierarchical precision score which used the class hierarchy as input and the predicted and true values.
     true_sum, predicted_sum, intersection_sum = _aggregate_class_sets(
         class_hierarchy._get_ancestors, y_true, y_pred)
     if predicted_sum == 0:
@@ -592,6 +639,7 @@ def precision_score_ancestors(class_hierarchy, y_true, y_pred):
         return intersection_sum / predicted_sum
 
 def recall_score_ancestors(class_hierarchy, y_true, y_pred):
+    # hierarchical recall score which used the class hierarchy as input and the predicted and true values.
     true_sum, predicted_sum, intersection_sum = _aggregate_class_sets(
         class_hierarchy._get_ancestors, y_true, y_pred)
     if true_sum == 0:
@@ -600,6 +648,7 @@ def recall_score_ancestors(class_hierarchy, y_true, y_pred):
         return intersection_sum / true_sum
 
 def f1_score_ancestors(class_hierarchy, y_true, y_pred, beta):
+    # hierarchical f1 score which used the class hierarchy as input and the predicted and true values. Also beta can be adjusted.
     precision = precision_score_ancestors(class_hierarchy, y_true, y_pred)
     recall = recall_score_ancestors(class_hierarchy, y_true, y_pred)
     if (precision == None) or (recall == None):
