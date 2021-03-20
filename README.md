@@ -23,17 +23,18 @@ File with our respective research paper.
 
 ## Data_Cleaning_Preparation.ipynb
 
-This file includes the code which is used to clean and prepare the data sets that we received from the online retailer. Firstly, we rename some of the columns in this data set. Secondly, we remove noisy observations from the data (as is explained in Appendix B in the research paper). Thirdly, we provide code for variables that we created ourselves. Fourth and last, code for creating Figure 1 in the research paper (determinant availability) is provided. 
+This file includes the code which is used to clean and prepare the data sets received from the online retailer. Firstly, we rename some of the columns in this data set. Secondly, we remove noisy observations from the data (as is explained in Appendix B in the research paper). Thirdly, we provide code for variables that we created ourselves. Fourth and last, code for creating Figure 1 in the research paper (determinant availability) is provided. Note that the paths where the data files from the retailer originate and to which the cleaned and prepared data should be written should be specified by the user.
 
 ## dynamic_input_data.py
 
 This file includes functions which are used to create the input data (belonging to dynamic variables) for the HCOT algorithm. 
 
-- dataX(df, DATE, X_col, y_col, historic_variable, days): main function for creating input data which computes the features based on X, which is the point in time when we make the predictions.
 - addKnownColumns(df,X): add the dynamic variables accociated with the match determinants.
-- addProductColumns(df,X): add dynamic variables accociated with product groups.
-- addSellerColumns(df,X): add dynamic variables accociated with sellerId's.
+- addProductColumns(df,X): add dynamic variables accociated with products. This function makes use of two supporting functions: 'addProductColumns0' and 'addProductColumnsX' based on the number of days after the order date that the dynamic variables should be computed for.
+- addSellerColumns(df,X): add dynamic variables accociated with sellers.  This function makes use of two supporting functions: 'addSellerColumns0' and 'addSellerColumnsX' based on the number of days after the order date that the dynamic variables should be computed for.
 - addHistoricPerformance(df, variable = 'transporterCode', X = 0): add dynamic variables associated with historic performance. This function creates 3 columns with the historic fraction of orders belonging to Happy, Unhappy and Unknown matches.
+- dataX(df, DATE, X_col, y_col, historic_variable, days): main function for creating input data _X_ (explanatory) and _y_ (dependent), computed _days_ days after the date of ordering.
+- initialiseData(): return a data frame with data as well as feature names, historic variables and date information. This function is used to initialise the data and create lists of variable names that will be used in subsequent code files.
 
 ## validation.py
 
