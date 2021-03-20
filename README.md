@@ -79,7 +79,6 @@ This file includes the HCOT algoritm together with functions to test and evaluat
   - predict_proba(X, threshold): predict the values of X by making use of a pre-defined threshold for each node, if threshold not reached then blocked.
   - predict_proba2(X, THRESHOLDS): predict the values of X by making use of node-specific thresholds (THRESHOLDS), if threshold not reached then blocked.
   - get_probabilities(X, y): get the class probabilities for each instance, this is used for training the thresholds with CAT.
-- initialiseData(): function to load data and retrieve features for prediction (included in dynamicHierarchicalClassifier).
 - dynamicHierarchicalClassifier(START, END): CAT-HCOT algorithm to test instances over a period from START till END.
 - get_performance(...): function included in dynamicHierarchicalClassifier to compute daily/global performance measures while running HCOT.
 - precision_score_ancestors(class_hierarchy, y_true, y_pred): hierarchical precision score, input is the class_hierarchy from ClassHierarchy.
