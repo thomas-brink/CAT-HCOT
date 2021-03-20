@@ -29,18 +29,17 @@ def addKnownColumns(df,X):
     df['onTimeDeliveryKnownX'] = ((df_[:,0] <= X) & (df_[:,1] == True))
     df['lateDeliveryKnownX']   = ((df_[:,0] <= X) & (df_[:,1] == False))
     
-    # df['onTimeDeliveryKnownX'] = df.apply(lambda row: True if ((row.actualDeliveryDays <= X) and (row.onTimeDelivery == True)) else False, axis = 1)
-    # df['lateDeliveryKnownX']   = df.apply(lambda row: True if ((row.actualDeliveryDays <= X) and (row.onTimeDelivery == False)) else False, axis = 1)
-    
     for transporter in df['transporterCodeGeneral'].unique():
         dummyColumn = 'transporter' + transporter +'/X'
         df[dummyColumn] = ((df_[:,2] <= X) & (df_[:,3] == transporter))
-        # df[dummyColumn] = df.apply(lambda row: True if ((row.shipmentDays <= X) and (row.transporterCodeGeneral == transporter)) else False, axis = 1)
 
     return df
 
 
 def addProductColumns(df,X):
+    '''
+    Add dynamic variables accociated with products. This function makes use of two supporting functions: 'addProductColumns0' and 'addProductColumnsX' based on the number of days after the order date that the dynamic variables should be computed for.
+    '''
     
     if ['productOrderCount0','productTotalCount0','productTotalReturned0','productReturnFraction0'] not in list(df.columns):
     
@@ -61,6 +60,9 @@ def addProductColumns(df,X):
 
 
 def addSellerColumns(df,X):
+    '''
+    Add dynamic variables accociated with sellers.  This function makes use of two supporting functions: 'addSellerColumns0' and 'addSellerColumnsX' based on the number of days after the order date that the dynamic variables should be computed for.
+    '''
     
     if 'sellerDailyOrders0' not in list(df.columns):
     
@@ -429,7 +431,10 @@ def dataX(df, DATE, X_col, y_col, historic_variable, days):
 
 
 def initialiseData():
-    
+    '''
+    Return a data frame with data as well as feature names, historic variables and date information. This function is used to initialise the data and create lists of variable names that will be used in subsequent code files.
+    '''
+
     # Read in cleaned and prepared data file (.csv) that is created in the data_cleaning_preparation code
     df = pd.read_csv('path...', low_memory = True)
     
