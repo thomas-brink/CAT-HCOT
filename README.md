@@ -6,14 +6,11 @@ The files in this repository belong to the paper "A Certainty-Based Approach for
 The steps for running our code are as follows.
 1. Run the `Data_Cleaning_Preparation' file. This file loads in the data received from the retailer and creates a .csv file that contains the cleaned and prepared data.
 2. Load in the 'dynamic_input_data' file. This file creates dynamic data variables and the input data to be used for the CAT and HCOT procedures.
-3. Run the functions in the 'validation' file to obtain the optimal classifiers belonging to CAT-HCOT and the flat CAT-HCOT baseline.
-4. Load in the function from the 'CAT' file to implement the certainty-based automated thresholds (CAT) algorithm.
-5. Load in the functions from the 'HCOT' file and run the 'dynamicHierarchicalClassifier' function (in our paper, we use START=0 and END=10 days) to run the classifier belonging to the CAT-HCOT framework.
-6. Compare the performance of CAT-HCOT with the two baseline approaches by running the functions included in the 'baseline' file (in our paper, we use START=0 and END=10 days).
+3. Run the code as provided in the 'Seminar_Hierarchical_Classifiers' file. This file uses the cleaned and prepared data from step 1 as well as the functions provided in step 2 to perform both the validation and testing process for CAT-HCOT and the two baselines. More specific information on this code is provided in the specific section below. 
 
-Instead of steps 3-6, we also provide the 'seminar_hierarchical_classifiers' file, which can be used for validation, CAT, HCOT and the baselines as well. Note that this code does rely on the cleaned and prepared data as well as the dynamic input data functions from steps 1 and 2.  
+Before elaborating on these three steps in detail, we provide a short note on the code and briefly mention the paper that this code is applied to.
 
-Please note that some of the code requires the user to select a path from which to read input or to which to write output. These paths are currently kept general and should be filled in by the user. 
+Please note that some of the code requires the user to select a path from which to read input or to which to write output. Currently, examples for such paths are provided and a general format is provided as well. However, users should fill in these paths themselves when applying the code. 
 
 ## PaperCAT-HCOT.pdf
 
@@ -21,11 +18,11 @@ File with our respective research paper.
 
 **Abstract**: Online retailers collaborate more and more with partners to sell products via their platform, making it increasingly important to preserve platform quality. In this paper, we predict the quality of matches between sellers and customers associated with product orders, where we face a trade-off between the accuracy and timeliness of our predictions. To deal with this trade-off, we introduce the Hierarchical Classification Over Time (HCOT) algorithm, which dynamically classifies product orders using top-down, non-mandatory leaf-node prediction. To enforce a blocking approach with respect to the tree-based class hierarchy, we introduce the Certainty-based Automated Thresholds (CAT) algorithm, which automatically computes optimal thresholds at each node in the hierarchy. The resulting CAT-HCOT algorithm has the ability to provide both accurate and timely predictions while specifically tailoring the hierarchical classification approach to the domain of customer satisfaction in online retailing. CAT-HCOT obtains a predictive accuracy of 94%. In terms of timeliness, CAT-HCOT classifies 40% of product orders on the order date itself, 80% of product orders within five days after the order date, and 100% of product orders after 10 days. In contrast, a static classification approach is unable to capture the accuracy vs. timeliness trade-off. Also, CAT-HCOT outperforms a flat, one-level hierarchy baseline method in terms of hierarchical precision and recall scores.
 
-## Data_Cleaning_Preparation.ipynb
+## 1. Data_Cleaning_Preparation.ipynb
 
 This file includes the code which is used to clean and prepare the data sets received from the online retailer. Firstly, we rename some of the columns in this data set. Secondly, we remove noisy observations from the data (as is explained in Appendix B in the research paper). Thirdly, we provide code for variables that we created ourselves. Fourth and last, code for creating Figure 1 in the research paper (determinant availability) is provided. Note that the paths where the data files from the retailer originate and to which the cleaned and prepared data should be written should be specified by the user.
 
-## dynamic_input_data.py
+## 2. dynamic_input_data.py
 
 This file includes functions which are used to create the input data (belonging to dynamic variables) for the HCOT algorithm. 
 
@@ -36,7 +33,22 @@ This file includes functions which are used to create the input data (belonging 
 - dataX(df, DATE, X_col, y_col, historic_variable, days): main function for creating input data _X_ (explanatory) and _y_ (dependent), computed _days_ days after the date of ordering.
 - initialiseData(): return a data frame with data as well as feature names, historic variables and date information. This function is used to initialise the data and create lists of variable names that will be used in subsequent code files.
 
-## validation.py
+## 3. Seminar_Hierarchical_Classifiers.ipynb
+
+This file includes code that can be used as a replacement for the separate 'validation', 'CAT', 'HCOT' and 'baseline' code files. Note that the functions contained in this file are the same ones that are included in the previously discussed separate files. Running all parts in this single file allows the user to perform validation and testing for both CAT-HCOT and the two baselines. To do so, the following steps should be followed.
+
+1. Import packages: import the necessary packages.
+2. Load Data: load the data as created in the 'data_cleaning_preparation' code by running the initialiseData() function
+3. Functions: run the functions provided at the bottom of the code.
+4. Validation (flat): run the code in this section to perform validation for the flat CAT-HCOT baseline.
+5. Validation (HCOT): run the code in this section to perform validation for CAT-HCOT and the static HCOT baseline. Make sure to first run the functions contained in this folder before running the output.
+6. CAT-HCOT: run the code in this folder to perform testing following CAT-HCOT.
+7. Base Case 1 (Static): run the code in this folder to perform testing following the static HCOT baseline.
+8. Base Case 2 (Flat): run the code in this folder to perform testing following the flat CAT-HCOT baseline.
+
+Note that the functions relevant in this file can be divided into different groups, which are specifically presented in the 'functions' folder. These functions are all included in the 'Seminar_Hierarchical_Classifiers' file, so they are not used separately. The division we provide is purely for understanding purposes.
+
+### validation.py
 
 This file includes the code for applying the validation procedure that we use for CAT-HCOT and the two baseline approaches. Note that the validation procedure for CAT-HCOT is the same as that for the static baseline, since our hierarchies are optimised on a daily basis. The validation procedure evaluates all possible classifier combinations at parent nodes in the respective daily hierarchy, optimises the hyperparameters belonging to each combination, and outputs the respective performance. From the results, the best classifier combinations (per day) and their respective hyperparameters are obtained. These can subsequently be used for testing purposes. The validation code consists of the following functions:
 - HCOT_optimisation(): optimisation of a single hierarchy with pre-defined set of possible combination which includes the functions:
@@ -79,18 +91,5 @@ This file includes the HCOT algoritm together with functions to test and evaluat
 This file includes code for the two baseline methods: static HCOT and flat CAT-HCOT. For the static baseline, we predict all test instances on a daily basis, whereas the flat baseline performs CAT-HCOT in a flat (one-level) hierarchy. The static baseline applies the optimal hierarchies obtained via the validation procedure for CAT-HCOT, while the flat baseline uses the optimised hierarchies from the flat validation procedure (both are defined in 'validation.py'). The code in this file consists of two functions:
 - staticHierarchicalClassifier(START, END): static HCOT (no blocking), hence predicting all instances on a single point in time.
 - dynamicFlatClassifier(START, END): flat CAT-HCOT (one-level hierarchy), using similar blokking approach as in CAT-HCOT.
-
-## Seminar_Hierarchical_Classifiers.ipynb
-
-This file includes code that can be used as a replacement for the separate 'validation', 'CAT', 'HCOT' and 'baseline' code files. Note that the functions contained in this file are the same ones that are included in the previously discussed separate files. Running all parts in this single file allows the user to perform validation and testing for both CAT-HCOT and the two baselines. To do so, the following steps should be followed.
-
-1. Import packages: import the necessary packages.
-2. Load Data: load the data as created in the 'data_cleaning_preparation' code by running the initialiseData() function
-3. Functions: run the functions provided at the bottom of the code.
-4. Validation (flat): run the code in this section to perform validation for the flat CAT-HCOT baseline.
-5. Validation (HCOT): run the code in this section to perform validation for CAT-HCOT and the static HCOT baseline. Make sure to first run the functions contained in this folder before running the output.
-6. CAT-HCOT: run the code in this folder to perform testing following CAT-HCOT.
-7. Base Case 1 (Static): run the code in this folder to perform testing following the static HCOT baseline.
-8. Base Case 2 (Flat): run the code in this folder to perform testing following the flat CAT-HCOT baseline.
 
 If any questions or comments occur, please ask them via this GitHub page.
