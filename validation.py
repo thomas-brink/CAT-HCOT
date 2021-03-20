@@ -1,5 +1,3 @@
-#IMPORT functions.dataX, all of HCOT
-
 import pandas as pd
 import numpy as np
 
@@ -44,9 +42,9 @@ import random
 warnings.filterwarnings("ignore")
 
 def HCOT_optimisation():
-
-    import json
-    from numpyencoder import NumpyEncoder
+    '''
+    Optimisation of a single hierarchy with a pre-defined set of possible combinations to try. Output is a dictionary with f1 scores and optimal hyperparemtes for each combination.
+    '''
 
     df, X_col, Y_col, historic_variable, DATE = initialiseData():
 
@@ -92,7 +90,7 @@ def HCOT_optimisation():
     return output
 
 def get_hyperspace(combination):
-    
+    # create hyperspace for optimisation (currently supports DT, RF, NN and LR).
     param_hyperopt = {}
     
     for node, clf in enumerate(combination):
@@ -115,7 +113,7 @@ def get_hyperspace(combination):
     return param_hyperopt
 
 def clf_hypers(params):
-
+    #  function which distributes the hyperparameters over the 3 specific parent nodes in the hierarchy.
     clf = {}
     
     for ix, node in enumerate(['ORDERS','KNOWN','UNHAPPY']):
@@ -138,7 +136,7 @@ def clf_hypers(params):
     return clf
 
 def objective_function(params):
-    
+    # objective for optimising daily hierarchical classifier combination in HCOT.
     HC = HierarchicalClassifier(Tree)
     HC.fit_classifiers(clf_hypers(params))
     
@@ -151,7 +149,7 @@ def objective_function(params):
     return {'loss': -score, 'status': STATUS_OK, 'accuracy': accuracy}
 
 def hyperopt(param_space, X_train, y_train, X_val, y_val, num_eval):
-
+    # actual optimisation function for a single hierarchy with pre-set classifier combination.
     trials = Trials()
 
     best_param = fmin(objective_function, 
@@ -171,7 +169,10 @@ def hyperopt(param_space, X_train, y_train, X_val, y_val, num_eval):
     return best_param, f1, accuracy
 
 def flat_HCOT_optimisation():
-
+    '''
+    Optimisation of single 'one-level hierarchy' of the flat HCOT basline (supporting LR + RF). Output is a dictionary with f1 scores and optimal hyperparemtes for each combination.
+    For LR only 2 trailes are needed as there are only 2 possible hyperparemters. 
+    '''
     output = {}
 
     combinations = ['RF','LR']
@@ -216,7 +217,7 @@ def flat_HCOT_optimisation():
     return output
 
 def flat_get_hyperspace(combination):
-    
+    # reate hyperspace for optimisation.
     param_hyperopt = {}
 
     if combination == 'DT':
@@ -237,7 +238,7 @@ def flat_get_hyperspace(combination):
     return param_hyperopt
 
 def flat_objective_function(params):
-    
+    #  objective for optimising either LR or RF.
     if combination == 'RF':
         clf = RandomForestClassifier(random_state=0, class_weight='balanced', max_depth = params['RF_max_depth'], n_estimators = params['RF_n_estimators'])
     elif combination == 'LR':
@@ -253,7 +254,7 @@ def flat_objective_function(params):
     return {'loss': -f1, 'status': STATUS_OK, 'accuracy': accuracy}
 
 def flat_hyperopt(param_space, X_train, y_train, X_val, y_val, num_eval):
-
+    #  actual optimisation function.
     trials = Trials()
 
     best_param = fmin(flat_objective_function, 
