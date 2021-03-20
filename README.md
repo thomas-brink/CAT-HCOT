@@ -64,7 +64,7 @@ This file includes the code for applying the validation procedure that we use fo
 ### CAT.py
 
 This file includes the CAT algorithm that we apply to CAT-HCOT and the flat CAT-HCOT baseline. Note that a single run of the CAT algorithm computes a node- and day-specific threshold. Implementing CAT in our framework thus requires multiple runs of the CAT algorithm (for each node on each day with NMLNP). The code file consists of two main functions: 
-- opt_threshold(probs, node, day, certainty, option = 2, steps = 100): CAT for HCOT, using the hierarchy from the research paper.
+- opt_threshold(probs, node, day, certainty, steps = 100): CAT for HCOT, using the hierarchy from the research paper.
 - flat_thresholds(probs, node, day, certainty, steps = 100): CAT for flat CAT-HCOT, using the flat hierarchy from the research paper.
 
 ### HCOT.py
