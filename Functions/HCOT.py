@@ -478,7 +478,7 @@ def dynamicHierarchicalClassifier(START, END):
 
         THRESHOLDS = {}
         for node in range(1,8):
-            name, threshold = opt_threshold(probs, node, DAYS, CERTAINTY, 2)
+            name, threshold = opt_threshold(probs, node, DAYS, CERTAINTY)
             THRESHOLDS[name] = threshold
 
         if DAYS == START: #create dataframe to save predictions
@@ -510,7 +510,7 @@ def dynamicHierarchicalClassifier(START, END):
         current_pred = y_hat.iloc[:, y_hat.shape[1] - 1]
 
         statistics, feature_importances, previous_pred_block = get_performance(DAYS, END, pred, current_pred, index_leaf, index_no_leaf, 
-                                                                               previous_pred_block, THRESHOLDS, OPTION, CERTAINTY, y_test, Tree, HC, feature_importances, statistics)
+                                                                               previous_pred_block, THRESHOLDS, CERTAINTY, y_test, Tree, HC, feature_importances, statistics)
         
         file_name = 'statistics_optimal_'+str(CERTAINTY)+'.json'
         #path_name = 'path...' + file_name
@@ -524,7 +524,7 @@ def dynamicHierarchicalClassifier(START, END):
         
     return final_pred, statistics, feature_importances
 
-def get_performance(DAYS, END, pred, current_pred, index_leaf, index_no_leaf, previous_pred_block, THRESHOLDS, OPTION, CERTAINTY, y_test, Tree, HC, feature_importances, statistics):
+def get_performance(DAYS, END, pred, current_pred, index_leaf, index_no_leaf, previous_pred_block, THRESHOLDS, CERTAINTY, y_test, Tree, HC, feature_importances, statistics):
     '''
     Function which is used in dynamicHierarchicalClassifier to compute daily/global performance measures while running HCOT.
     '''
@@ -544,7 +544,6 @@ def get_performance(DAYS, END, pred, current_pred, index_leaf, index_no_leaf, pr
                       '%blocking'       :{}, '%Tblocking'           :{},
                       'tree_error'      :{},
                       'thresholds'      :{},
-                      'option'          :{},
                       'certainty'       :{}}
 
         for leaf in Tree._get_leaf_nodes()+Tree._get_internal_nodes(): 
@@ -576,7 +575,6 @@ def get_performance(DAYS, END, pred, current_pred, index_leaf, index_no_leaf, pr
     
     #Update Dictionary
     
-    statistics['option'][DAYS]          = OPTION
     statistics['certainty'][DAYS]       = CERTAINTY
     statistics['thresholds'][DAYS]      = THRESHOLDS
     statistics['%classified'][DAYS]     = current_pred.isin(Tree._get_leaf_nodes()).sum() / len(y_test)
