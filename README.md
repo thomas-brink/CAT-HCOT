@@ -38,8 +38,7 @@ This file includes functions which are used to create the input data (belonging 
 
 ## validation.py
 
-This file includes the code for applying the validation procedure that we use for HCOT and flat CAT-HCOT (as well as the baseline approaches).
-
+This file includes the code for applying the validation procedure that we use for CAT-HCOT and the two baseline approaches. Note that the validation procedure for CAT-HCOT is the same as that for the static baseline, since our hierarchies are optimised on a daily basis. The validation procedure evaluates all possible classifier combinations at parent nodes in the respective daily hierarchy, optimises the hyperparameters belonging to each combination, and outputs the respective performance. From the results, the best classifier combinations (per day) and their respective hyperparameters are obtained. These can subsequently be used for testing purposes. The validation code consists of the following functions:
 - HCOT_optimisation(): optimisation of a single hierarchy with pre-defined set of possible combination which includes the functions:
   - get_hyperspace(combination): create hyperspace for optimisation (currently supports DT, RF, NN and LR)
   - clf_hypers(params): function which distributes the hyperparameters over the 3 specific parent nodes in the hierarchy
@@ -52,7 +51,7 @@ This file includes the code for applying the validation procedure that we use fo
 
 ## CAT.py
 
-This file includes the CAT algorithm for both CAT-HCOT and flat CAT-HCOT
+This file includes the CAT algorithm that we apply to CAT-HCOT and the flat CAT-HCOT baseline. Note that a single run of the CAT algorithm computes a node- and day-specific threshold. Implementing CAT in our framework thus requires multiple runs of the CAT algorithm (for each node on each day with NMLNP). The code file consists of two main functions: 
 - opt_threshold(probs, node, day, certainty, option = 2, steps = 100): CAT for HCOT, using the hierarchy from our report
 - flat_thresholds(probs, node, day, certainty, steps = 100): CAT for flat HCOT, using the flat hierarchy from our report
 
