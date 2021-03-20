@@ -436,7 +436,8 @@ def initialiseData():
     '''
 
     # Read in cleaned and prepared data file (.csv) that is created in the data_cleaning_preparation code
-    df = pd.read_csv('path...', low_memory = True)
+    #df = pd.read_csv('path...', low_memory = True)
+    df = pd.read_csv('/Users/thoma/Documents/seminar_data/cleaned_prepared_data.csv')
     
     df['orderDate']                   = pd.to_datetime(df['orderDate'])
     df['cancellationDate']            = pd.to_datetime(df['cancellationDate'])
