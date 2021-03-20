@@ -9,7 +9,11 @@ The steps for running our code are as follows.
 3. Run the functions in the 'validation' file to obtain the optimal classifiers belonging to CAT-HCOT and the flat CAT-HCOT baseline.
 4. Load in the function from the 'CAT' file to implement the certainty-based automated thresholds (CAT) algorithm.
 5. Load in the functions from the 'HCOT' file and run the 'dynamicHierarchicalClassifier' function (in our paper, we use START=0 and END=10 days) to run the classifier belonging to the CAT-HCOT framework.
-6. Compare the performance of CAT-HCOT with the two baseline approaches by running the functions included in the 'baseline' file (in our paper, we use START=0 and END=10 days). 
+6. Compare the performance of CAT-HCOT with the two baseline approaches by running the functions included in the 'baseline' file (in our paper, we use START=0 and END=10 days).
+
+Instead of steps 3-6, we also provide the 'seminar_hierarchical_classifiers' file, which can be used for validation, CAT, HCOT and the baselines as well. Note that this code does rely on the cleaned and prepared data as well as the dynamic input data functions from steps 1 and 2.  
+
+Please note that some of the code requires the user to select a path from which to read input or to which to write output. These paths are currently kept general and should be filled in by the user. 
 
 ## PaperCAT-HCOT.pdf
 
@@ -53,7 +57,7 @@ This file includes the CAT algorithm for both CAT-HCOT and flat CAT-HCOT
 
 ## HCOT.py
 
-This file includes the complete HCOT algoritm together with function to test and evaluate the performance
+This file includes the complete HCOT algoritm together with function to test and evaluate the performance.
 - ClassHierarchy(root): Class with all functions to construct a hierarchy which is thereafter used for HierarchicalClassifier, main function:
   - add_node(children, parent): add a node with corresponding childnodes to the hierachy
 - HierarchicalClassifier(class_hierarchy): Class with all functions to train and test a hierarchical classifier, the main functions are:
@@ -75,3 +79,16 @@ This file includes the complete HCOT algoritm together with function to test and
 This file includes the baseline methods: static HCOT and flat CAT-HCOT
 - staticHierarchicalClassifier(START, END): static HCOT (no blocking), hence predicting all instances on a single point in time
 - dynamicFlatClassifier(START, END): flat CAT-HCOT (one-level hierarchy), using similar blokking approach as in CAT-HCOT
+
+## seminar_hierarchical_classifiers.ipynb
+
+This file includes code that can be used as a replacement for the separate 'validation', 'CAT', 'HCOT' and 'baseline' code files. Note that the functions contained in this file are the same ones that are included in the previously discussed separate files. Running all parts in this single file allows the user to perform validation and testing for both CAT-HCOT and the two baselines. To do so, the following steps should be followed.
+
+1. Import packages: import the necessary packages.
+2. Load Data: load the data as created in the 'data_cleaning_preparation' code by running the initialiseData() function
+3. Functions: run the functions provided at the bottom of the code.
+4. Validation (flat): run the code in this section to perform validation for the flat CAT-HCOT baseline.
+5. Validation (HCOT): run the code in this section to perform validation for CAT-HCOT and the static HCOT baseline. Make sure to first run the functions contained in this folder before running the output.
+6. CAT-HCOT: run the code in this folder to perform testing following CAT-HCOT.
+7. Base Case 1 (Static): run the code in this folder to perform testing following the static HCOT baseline.
+8. Base Case 2 (Flat): run the code in this folder to perform testing following the flat CAT-HCOT baseline.
