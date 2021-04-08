@@ -10,7 +10,7 @@ The steps for running our code are as follows.
 
 Before elaborating on these three steps in detail, we provide a short note on the code and briefly mention the paper that this code is applied to.
 
-Please note that some of the code requires the user to select a path from which to read input or to which to write output. Currently, examples for such paths are provided and a general format is provided as well. However, users should fill in these paths themselves when applying the code. 
+Please note that some of the code requires the user to select a path from which to read input or to which to write output. Currently, examples for such paths are provided and a general format is provided as well. However, users should fill in these paths themselves when applying the code. Furthermore, we note that the data used for this research paper is not publicly available due to confidentiality agreements between the researchers and the online retailer. 
 
 ## PaperCAT-HCOT.pdf
 
